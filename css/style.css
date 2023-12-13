@@ -7,7 +7,8 @@
 body {
 	min-height: 100vh;
 	overflow: hidden;
-	background-color: #63330a;
+	background: #302e2b;
+	background: radial-gradient(circle, #472f22 40%, #1c130f 100%);
 }
 
 .menu-wrapper {
