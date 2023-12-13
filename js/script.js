@@ -60,7 +60,9 @@ class Game {
 		this.level = this.levelManager.getLevel(0)
 
 		this.boardElements = []
+		this.levelElements = []
 		this.generateBoard()
+		this.generateLevelElements()
 		// this.app.stage.addChild(...this.boardElements)
 
 		// this.app.stage.on('click', event => this.handleClick(event))
@@ -70,26 +72,14 @@ class Game {
 		const matrix = this.board
 		for (let row = 0; row < matrix.length; row++) {
 			for (let el = 0; el < matrix[row].length; el++) {
+				const value = matrix[row][el]
 				let newEl
-				switch (matrix[row][el]) {
-					case 0:
-						newEl = PIXI.Sprite.from('/assets/sprites/main.png')
-						break
-					case 1:
-						newEl = PIXI.Sprite.from('/assets/sprites/cell.png')
-						break
-					case 'fire':
-						newEl = PIXI.Sprite.from('/assets/sprites/cell1.png')
-						break
-					case 'water':
-						newEl = PIXI.Sprite.from('/assets/sprites/cell2.png')
-						break
-					case 'earth':
-						newEl = PIXI.Sprite.from('/assets/sprites/cell3.png')
-						break
-					case 'air':
-						newEl = PIXI.Sprite.from('/assets/sprites/cell4.png')
-						break
+
+				if (typeof value === 'string') {
+					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
+					newEl.alpha = 0.5
+				} else if (value === 1) {
+					newEl = PIXI.Sprite.from(`/assets/sprites/cell.png`)
 				}
 
 				if (newEl) {
@@ -98,7 +88,24 @@ class Game {
 				}
 			}
 		}
-		console.log(this.boardElements)
+	}
+
+	generateLevelElements() {
+		const matrix = this.level
+		for (let row = 0; row < matrix.length; row++) {
+			for (let el = 0; el < matrix[row].length; el++) {
+				const value = matrix[row][el]
+				let newEl
+				if (typeof value === 'string') {
+					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
+				}
+
+				if (newEl) {
+					newEl.position.set(200 + el * TILE_SIZE, 100 + row * TILE_SIZE)
+					this.app.stage.addChild(newEl)
+				}
+			}
+		}
 	}
 
 	handleClick(event) {
