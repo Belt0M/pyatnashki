@@ -9,20 +9,54 @@ body {
 	overflow: hidden;
 	background: #302e2b;
 	background: radial-gradient(circle, #472f22 40%, #1c130f 100%);
+	font-family: 'Pixelify Sans', sans-serif;
+	color: #fff;
 }
 
 .menu-wrapper {
-	display: flex;
-	justify-content: space-between;
+	position: absolute;
+	display: none;
 	align-items: center;
-	flex-direction: column;
+	height: 100vh;
+	width: 100vw;
+	z-index: 100;
+	background: radial-gradient(
+		circle,
+		rgba(0, 0, 0, 0.25) 40%,
+		rgba(161, 37, 23, 0.3) 100%
+	);
+	backdrop-filter: blur(10px);
 }
 
 .menu-container {
-	display: none;
-	justify-content: center;
-	align-items: center;
-	height: 100vh;
+	width: 40%;
+	display: flex;
+	padding: 0 6rem;
+	flex-direction: column;
+}
+
+.menu-container > h1 {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.menu-container ul {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.menu-container ul > li {
+	list-style: none;
+	font-size: 2rem;
+	cursor: pointer;
+	transition: all 0.3s;
+}
+
+.menu-container ul > li:hover {
+	-webkit-text-fill-color: black;
+	-webkit-text-stroke-color: white;
+	-webkit-text-stroke-width: 1.25px;
 }
 
 .game-container {
