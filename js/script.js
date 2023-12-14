@@ -63,7 +63,7 @@ class Game {
 				if (newEl) {
 					newEl.type = value
 					this.boardElements.push(newEl)
-					newEl.position.set(200 + el * TILE_SIZE, 100 + row * TILE_SIZE)
+					newEl.position.set(125 + el * TILE_SIZE, 55 + row * TILE_SIZE)
 					this.app.stage.addChild(newEl)
 				}
 			}
@@ -83,7 +83,7 @@ class Game {
 				if (newEl) {
 					newEl.type = value
 					this.levelElements.push(newEl)
-					newEl.position.set(200 + el * TILE_SIZE, 100 + row * TILE_SIZE)
+					newEl.position.set(125 + el * TILE_SIZE, 55 + row * TILE_SIZE)
 					this.app.stage.addChild(newEl)
 				}
 			}
@@ -163,9 +163,6 @@ class Game {
 			const isHorizontalMovement = Math.abs(deltaX) > Math.abs(deltaY)
 			const isVerticalMovement = Math.abs(deltaY) > Math.abs(deltaX)
 
-			// Check collisions
-			// if (this.checkCollision()) return
-
 			// Update the element's position based on the movement direction
 			const activeElPosition = this.activeElement.position
 			if (isHorizontalMovement) {
@@ -203,41 +200,31 @@ class Game {
 
 	checkCollision(x, y) {
 		// Check for collisions with board elements
-		// for (const element of this.boardElements) {
-		// 	element.type === 1 &&
-		// 		console.log(
-		// 			element.x,
-		// 			element.y,
-		// 			x,
-		// 			y,
-		// 			!(element.x === x && element.y === y)
-		// 		)
-		// 	if (element.type === 1 && !(element.x === x && element.y === y)) {
-		// 		console.log('end')
-		// 		return true
-		// 	}
-		// }
-
-		// Check for collisions with level elements
-		for (const element of this.levelElements) {
-			// Create array with all level elements except active one
-			const elementsArray = ['block', 'water', 'fire', 'earth', 'air']
-			elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
-			elementsArray.includes(element.type) &&
+		for (const element of this.boardElements) {
+			element.type === 0 &&
 				console.log(
-					element.type,
 					element.x,
 					element.y,
 					x,
 					y,
 					element.x === x && element.y === y
 				)
+			if (element.type === 0 && element.x === x && element.y === y) {
+				console.log('end')
+				return true
+			}
+		}
+
+		// Check for collisions with level elements
+		for (const element of this.levelElements) {
+			// Create array with all level elements except active one
+			const elementsArray = ['block', 'water', 'fire', 'earth', 'air']
+			elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
 			if (
 				elementsArray.includes(element.type) &&
 				element.x === x &&
 				element.y === y
 			) {
-				console.log('end')
 				return true
 			}
 		}
