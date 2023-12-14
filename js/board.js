@@ -14,7 +14,7 @@ const matrix = JSON.parse(`[
 
 class Board {
 	constructor() {
-		this.doGET('/matrices/board.json')
+		this.matrix = matrix
 		this.elements = []
 	}
 
