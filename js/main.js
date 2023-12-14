@@ -1,4 +1,4 @@
-import { Game } from './game.js'
+const TILE_SIZE = 70
 
 // Init the game start
 const game = new Game()

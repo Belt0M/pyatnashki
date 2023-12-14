@@ -1,9 +1,8 @@
-import { TILE_SIZE } from '../variables/tile-size.js'
-import board from '/matrices/board.json' assert { type: 'json' }
+// Do the request
 
-export class Board {
+class Board {
 	constructor() {
-		this.matrix = board
+		this.doGET('/matrices/board.json')
 		this.elements = []
 	}
 
@@ -37,5 +36,23 @@ export class Board {
 				}
 			}
 		}
+	}
+	doGET(path) {
+		var req = new XMLHttpRequest()
+		req.overrideMimeType('application/json')
+		req.open('GET', path, true)
+		req.onload = () => {
+			if (req.status === 200) {
+				this.matrix = JSON.parse(req.responseText)
+			} else {
+				console.error(
+					`Failed to fetch data from ${path}. Status: ${req.status}`
+				)
+			}
+		}
+		req.onerror = () => {
+			console.error(`Network error while trying to fetch data from ${path}`)
+		}
+		req.send(null)
 	}
 }

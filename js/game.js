@@ -1,8 +1,4 @@
-import { TILE_SIZE } from '../variables/tile-size.js'
-import { Board } from './board.js'
-import { LevelManager } from './level-manager.js'
-
-export class Game {
+class Game {
 	constructor() {
 		// Init the Pixi canvas
 		this.app = new PIXI.Application({
@@ -174,7 +170,6 @@ export class Game {
 	}
 
 	showMenu() {
-		console.log(this.difficulty)
 		if (this.difficulty + 1 >= this.level.levels.length) {
 			this.showGameOver()
 			document.querySelector('#next').disabled = true
