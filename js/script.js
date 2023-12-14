@@ -6,48 +6,44 @@ const TILE_SIZE = 70
 class LevelManager {
 	constructor() {
 		this.levels = levels
+		this.elements = []
 	}
 
+	// Get the exact level matrix
 	getLevel(difficulty) {
 		return this.levels[difficulty].matrix
 	}
+
+	// Generate 4 level elements, stones and wood blocks
+	generateLevelElements(matrix) {
+		for (let row = 0; row < matrix.length; row++) {
+			for (let el = 0; el < matrix[row].length; el++) {
+				const value = matrix[row][el]
+				let newEl
+				if (typeof value === 'string') {
+					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
+				}
+
+				if (newEl) {
+					newEl.type = value
+					this.elements.push(newEl)
+					newEl.position.set(125 + el * TILE_SIZE, 55 + row * TILE_SIZE)
+				}
+			}
+		}
+	}
 }
 
-class Game {
+class Board {
 	constructor() {
-		this.gameField = document.querySelector('.game-field')
-		this.menu = document.querySelector('.menu-wrapper')
-
-		this.board = board
-		// Init the Pixi canvas
-		this.app = new PIXI.Application({
-			width: 1024,
-			height: 768,
-			backgroundAlpha: 0,
-		})
-
-		this.gameField.appendChild(this.app.view)
-
-		this.levelManager = new LevelManager()
-		this.level = this.levelManager.getLevel(0)
-
-		this.boardElements = []
-		this.levelElements = []
-		this.completedElements = {
-			water: false,
-			fire: false,
-			earth: false,
-			air: false,
-		}
-		this.activeElement = null
-
-		this.generateBoard()
-		this.generateLevelElements()
+		this.matrix = board
+		this.elements = []
 	}
 
 	// Generate common board structure
 	generateBoard() {
-		const matrix = this.board
+		const matrix = this.matrix
+		const boardElements = []
 		for (let row = 0; row < matrix.length; row++) {
 			for (let el = 0; el < matrix[row].length; el++) {
 				const value = matrix[row][el]
@@ -70,38 +66,51 @@ class Game {
 
 				if (newEl) {
 					newEl.type = value
-					this.boardElements.push(newEl)
 					newEl.position.set(125 + el * TILE_SIZE, 55 + row * TILE_SIZE)
-					this.app.stage.addChild(newEl)
+					this.elements.push(newEl)
 				}
 			}
 		}
 	}
+}
 
-	// Generate 4 level elements, stones and wood blocks
-	generateLevelElements() {
-		const matrix = this.level
-		for (let row = 0; row < matrix.length; row++) {
-			for (let el = 0; el < matrix[row].length; el++) {
-				const value = matrix[row][el]
-				let newEl
-				if (typeof value === 'string') {
-					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
-				}
+class Game {
+	constructor() {
+		// Init the Pixi canvas
+		this.app = new PIXI.Application({
+			width: 1024,
+			height: 768,
+			backgroundAlpha: 0,
+		})
 
-				if (newEl) {
-					newEl.type = value
-					this.levelElements.push(newEl)
-					newEl.position.set(125 + el * TILE_SIZE, 55 + row * TILE_SIZE)
-					this.app.stage.addChild(newEl)
-				}
-			}
+		this.gameField = document.querySelector('.game-field')
+		this.menu = document.querySelector('.menu-wrapper')
+
+		this.gameField.appendChild(this.app.view)
+
+		this.board = new Board()
+
+		// Generate and add to the scene the board elements
+		this.board.generateBoard()
+		this.app.stage.addChild(...this.board.elements)
+
+		// Generate and add the level elements to the scene
+		this.level = new LevelManager()
+		this.level.generateLevelElements(this.level.getLevel(0))
+		this.app.stage.addChild(...this.level.elements)
+
+		this.completedElements = {
+			water: false,
+			fire: false,
+			earth: false,
+			air: false,
 		}
+		this.activeElement = null
 	}
 
 	// Find dragged element
 	findSelectedElement(event) {
-		return this.levelElements.find(
+		return this.level.elements.find(
 			element =>
 				element.x <= event.clientX - this.gameField.offsetLeft &&
 				element.getBounds().x + TILE_SIZE >=
@@ -192,7 +201,7 @@ class Game {
 		elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
 
 		// Check for collisions with board elements and is the element completed
-		for (const element of this.boardElements) {
+		for (const element of this.board.elements) {
 			if (element.type === 0 && element.x === x && element.y === y) {
 				return true
 			} else if (
@@ -207,7 +216,7 @@ class Game {
 		}
 
 		// Check for collisions with level elements
-		for (const element of this.levelElements) {
+		for (const element of this.level.elements) {
 			if (
 				elementsArray.includes(element.type) &&
 				element.x === x &&
