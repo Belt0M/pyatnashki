@@ -43,7 +43,6 @@ class Board {
 	// Generate common board structure
 	generateBoard() {
 		const matrix = this.matrix
-		const boardElements = []
 		for (let row = 0; row < matrix.length; row++) {
 			for (let el = 0; el < matrix[row].length; el++) {
 				const value = matrix[row][el]
@@ -95,8 +94,9 @@ class Game {
 		this.app.stage.addChild(...this.board.elements)
 
 		// Generate and add the level elements to the scene
+		this.difficulty = 0
 		this.level = new LevelManager()
-		this.level.generateLevelElements(this.level.getLevel(0))
+		this.level.generateLevelElements(this.level.getLevel(this.difficulty))
 		this.app.stage.addChild(...this.level.elements)
 
 		this.completedElements = {
@@ -241,6 +241,49 @@ class Game {
 		this.menu.style.display = 'flex'
 	}
 
+	hideMenu() {
+		this.menu.style.display = 'none'
+	}
+
+	clearCanvas() {
+		this.app.stage.children = []
+		this.board.elements = []
+		this.level.elements = []
+	}
+
+	nextLevel() {
+		if (this.difficulty + 1 <= this.level.levels.length) {
+			this.clearCanvas()
+			this.hideMenu()
+
+			this.board.generateBoard()
+			this.level.generateLevelElements(this.level.getLevel(this.difficulty + 1))
+
+			this.app.stage.addChild(...this.board.elements)
+			this.app.stage.addChild(...this.level.elements)
+		}
+	}
+
+	prevLevel() {}
+
+	exit() {}
+
+	menuController(event) {
+		const choice = event.target.innerHTML.slice(0, 4).toLowerCase()
+
+		switch (choice) {
+			case 'next':
+				this.nextLevel()
+				break
+			case 'prev':
+				this.prevLevel()
+				break
+			case 'exit':
+				this.exit()
+				break
+		}
+	}
+
 	update() {}
 
 	start() {
@@ -258,3 +301,8 @@ game.start()
 game.app.view.addEventListener('mousedown', game.handleMouseDown.bind(game))
 game.app.view.addEventListener('mouseup', game.handleMouseUp.bind(game))
 game.app.view.addEventListener('mousemove', game.handleMouseMove.bind(game))
+
+// Menu listener
+document
+	.querySelector('#menu-elements')
+	.addEventListener('click', game.menuController.bind(game))
