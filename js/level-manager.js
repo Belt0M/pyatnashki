@@ -1,3 +1,5 @@
+const BASE_URL = `${/(.*)\//.exec(window.document.location.href)[0]}`
+
 class LevelManager {
 	constructor() {
 		this.elements = []
@@ -15,7 +17,7 @@ class LevelManager {
 				const value = matrix[row][el]
 				let newEl
 				if (typeof value === 'string') {
-					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
+					newEl = PIXI.Sprite.from(`${BASE_URL}assets/sprites/${value}.png`)
 				}
 
 				if (newEl) {

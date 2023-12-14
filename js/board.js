@@ -14,15 +14,15 @@ class Board {
 				let newEl
 
 				if (typeof value === 'string') {
-					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
+					newEl = PIXI.Sprite.from(`${BASE_URL}assets/sprites/${value}.png`)
 					newEl.alpha = 0.5
 				} else {
 					switch (value) {
 						case 1:
-							newEl = PIXI.Sprite.from(`/assets/sprites/cell.png`)
+							newEl = PIXI.Sprite.from(`${BASE_URL}assets/sprites/cell.png`)
 							break
 						case 0:
-							newEl = PIXI.Sprite.from(`/assets/sprites/main.png`)
+							newEl = PIXI.Sprite.from(`${BASE_URL}assets/sprites/main.png`)
 							newEl.alpha = 0
 							break
 					}

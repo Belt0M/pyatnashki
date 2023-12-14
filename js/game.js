@@ -25,14 +25,10 @@ class Game {
 		// Generate and add to the scene the board elements
 		console.log(`${/(.*)\//.exec(window.document.location.href)[0]}`)
 		this.board = new Board()
-		await this.board.doGET(
-			`${/(.*)\//.exec(window.document.location.href)[0]}/matrices/board.json`
-		)
+		await this.board.doGET(`${BASE_URL}/matrices/board.json`)
 
 		this.level = new LevelManager()
-		await this.level.doGET(
-			`${/(.*)\//.exec(window.document.location.href)[0]}/matrices/levels.json`
-		)
+		await this.level.doGET(`${BASE_URL}/matrices/levels.json`)
 
 		console.log(this.board.elements)
 		this.board.generateBoard()
