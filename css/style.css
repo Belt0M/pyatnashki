@@ -2,14 +2,14 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: 0;
+	font-family: 'Pixelify Sans', sans-serif;
 }
 
 body {
 	min-height: 100vh;
 	overflow: hidden;
-	background: #302e2b;
+	background: #472f22;
 	background: radial-gradient(circle, #472f22 40%, #1c130f 100%);
-	font-family: 'Pixelify Sans', sans-serif;
 	color: #fff;
 }
 
@@ -41,19 +41,27 @@ body {
 }
 
 .menu-container ul {
+	list-style: none;
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
 }
 
-.menu-container ul > li {
-	list-style: none;
+.menu-container ul button {
 	font-size: 2rem;
 	cursor: pointer;
 	transition: all 0.3s;
+	background: none;
+	border: none;
+	color: #fff;
 }
 
-.menu-container ul > li:hover {
+.menu-container ul button:disabled {
+	color: #c4c4c4;
+	cursor: not-allowed;
+}
+
+.menu-container ul > li button:not(:disabled):hover {
 	-webkit-text-fill-color: black;
 	-webkit-text-stroke-color: white;
 	-webkit-text-stroke-width: 1.25px;
@@ -71,4 +79,46 @@ body {
 .game-field {
 	position: relative;
 	height: auto;
+}
+
+.greeting-banner {
+	position: absolute;
+	inset: 0;
+	background: #472f22;
+	background: radial-gradient(circle, #472f22 40%, #1c130f 100%);
+	align-items: center;
+	justify-content: center;
+	font-size: 3.5rem;
+	gap: 3rem;
+	text-transform: uppercase;
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+	z-index: 1000;
+	transition: all 0.3s;
+}
+
+.greeting-banner span {
+	cursor: pointer;
+}
+
+.greeting-banner span:hover {
+	-webkit-text-fill-color: black;
+	-webkit-text-stroke-color: white;
+	-webkit-text-stroke-width: 1.25px;
+}
+
+.game-over {
+	position: absolute;
+	inset: 0;
+	background: #472f22;
+	background: radial-gradient(circle, #472f22 40%, #1c130f 100%);
+	align-items: center;
+	justify-content: center;
+	font-size: 6rem;
+	text-transform: uppercase;
+	display: none;
+	text-align: center;
+	cursor: pointer;
+	z-index: 1000;
 }

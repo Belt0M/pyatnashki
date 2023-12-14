@@ -21,9 +21,15 @@
 		<div class="menu-container">
 			<h1>Pyatnashki</h1>
 			<ul id='menu-elements'>
-				<li id='next'>Next level</li>
-				<li id='prev'>Previous level</li>
-				<li id='exit'>Exit</li>
+				<li>
+					<button id='next' type='button'>Next level</button>
+				</li>
+				<li>
+					<button id='prev' type='button'>Previous level</button>
+				</li>
+				<li>
+					<button id='exit' type='button'>Exit</button>
+				</li>
 			</ul>
 		</div>
 	</div>
@@ -32,8 +38,17 @@
 		<div class='game-field'></div>
 	</div>
 
+	<div class="greeting-banner">
+		<h1>Pyatnashki</h1>
+		<span>Start Game</span>
+	</div>
+
+	<div class="game-over">
+		<span>Game Over!</span>
+	</div>
+
 	<script src='node_modules/pixi.js/dist/pixi.min.js'></script>
-	<script type="module" src='js/script.js'></script>
+	<script type="module" src='js/main.js'></script>
 </body>
 
 </html>

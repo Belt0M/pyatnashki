@@ -1,79 +1,8 @@
-import board from '/matrices/board.json' assert { type: 'json' }
-import levels from '/matrices/levels.json' assert { type: 'json' }
+import { TILE_SIZE } from '../variables/tile-size.js'
+import { Board } from './board.js'
+import { LevelManager } from './level-manager.js'
 
-const TILE_SIZE = 70
-
-class LevelManager {
-	constructor() {
-		this.levels = levels
-		this.elements = []
-	}
-
-	// Get the exact level matrix
-	getLevel(difficulty) {
-		return this.levels[difficulty].matrix
-	}
-
-	// Generate 4 level elements, stones and wood blocks
-	generateLevelElements(matrix) {
-		for (let row = 0; row < matrix.length; row++) {
-			for (let el = 0; el < matrix[row].length; el++) {
-				const value = matrix[row][el]
-				let newEl
-				if (typeof value === 'string') {
-					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
-				}
-
-				if (newEl) {
-					newEl.type = value
-					this.elements.push(newEl)
-					newEl.position.set(125 + el * TILE_SIZE, 55 + row * TILE_SIZE)
-				}
-			}
-		}
-	}
-}
-
-class Board {
-	constructor() {
-		this.matrix = board
-		this.elements = []
-	}
-
-	// Generate common board structure
-	generateBoard() {
-		const matrix = this.matrix
-		for (let row = 0; row < matrix.length; row++) {
-			for (let el = 0; el < matrix[row].length; el++) {
-				const value = matrix[row][el]
-				let newEl
-
-				if (typeof value === 'string') {
-					newEl = PIXI.Sprite.from(`/assets/sprites/${value}.png`)
-					newEl.alpha = 0.5
-				} else {
-					switch (value) {
-						case 1:
-							newEl = PIXI.Sprite.from(`/assets/sprites/cell.png`)
-							break
-						case 0:
-							newEl = PIXI.Sprite.from(`/assets/sprites/main.png`)
-							newEl.alpha = 0
-							break
-					}
-				}
-
-				if (newEl) {
-					newEl.type = value
-					newEl.position.set(125 + el * TILE_SIZE, 55 + row * TILE_SIZE)
-					this.elements.push(newEl)
-				}
-			}
-		}
-	}
-}
-
-class Game {
+export class Game {
 	constructor() {
 		// Init the Pixi canvas
 		this.app = new PIXI.Application({
@@ -88,16 +17,7 @@ class Game {
 		this.gameField.appendChild(this.app.view)
 
 		this.board = new Board()
-
-		// Generate and add to the scene the board elements
-		this.board.generateBoard()
-		this.app.stage.addChild(...this.board.elements)
-
-		// Generate and add the level elements to the scene
-		this.difficulty = 0
 		this.level = new LevelManager()
-		this.level.generateLevelElements(this.level.getLevel(this.difficulty))
-		this.app.stage.addChild(...this.level.elements)
 
 		this.completedElements = {
 			water: false,
@@ -106,6 +26,17 @@ class Game {
 			air: false,
 		}
 		this.activeElement = null
+	}
+
+	startGame() {
+		// Generate and add to the scene the board elements
+		this.board.generateBoard()
+		this.app.stage.addChild(...this.board.elements)
+
+		// Generate and add the level elements to the scene
+		this.difficulty = 0
+		this.level.generateLevelElements(this.level.getLevel(this.difficulty))
+		this.app.stage.addChild(...this.level.elements)
 	}
 
 	// Find dragged element
@@ -197,8 +128,9 @@ class Game {
 	// Check for collisions with prohibited items for passage
 	checkCollision(x, y) {
 		// Create array with all level elements except active one
-		const elementsArray = ['block', 'water', 'fire', 'earth', 'air']
-		elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
+		const elementsArray = ['block', 'wood', 'water', 'fire', 'earth', 'air']
+		this.activeElement.type !== 'wood' &&
+			elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
 
 		// Check for collisions with board elements and is the element completed
 		for (const element of this.board.elements) {
@@ -237,7 +169,23 @@ class Game {
 		}
 	}
 
+	showGameOver() {
+		document.querySelector('.game-over').style.display = 'flex'
+	}
+
 	showMenu() {
+		console.log(this.difficulty)
+		if (this.difficulty + 1 >= this.level.levels.length) {
+			this.showGameOver()
+			document.querySelector('#next').disabled = true
+			document.querySelector('#prev').disabled = false
+		} else if (this.difficulty === 0) {
+			document.querySelector('#next').disabled = false
+			document.querySelector('#prev').disabled = true
+		} else {
+			document.querySelector('#next').disabled = false
+			document.querySelector('#prev').disabled = false
+		}
 		this.menu.style.display = 'flex'
 	}
 
@@ -249,24 +197,48 @@ class Game {
 		this.app.stage.children = []
 		this.board.elements = []
 		this.level.elements = []
+		this.completedElements = {
+			air: false,
+			earth: false,
+			fire: false,
+			water: false,
+		}
 	}
 
 	nextLevel() {
 		if (this.difficulty + 1 <= this.level.levels.length) {
+			this.difficulty += 1
 			this.clearCanvas()
 			this.hideMenu()
 
 			this.board.generateBoard()
-			this.level.generateLevelElements(this.level.getLevel(this.difficulty + 1))
+			this.level.generateLevelElements(this.level.getLevel(this.difficulty))
 
 			this.app.stage.addChild(...this.board.elements)
 			this.app.stage.addChild(...this.level.elements)
 		}
 	}
 
-	prevLevel() {}
+	prevLevel() {
+		if (this.difficulty - 1 >= 0) {
+			this.difficulty -= 1
+			this.clearCanvas()
+			this.hideMenu()
 
-	exit() {}
+			this.board.generateBoard()
+			this.level.generateLevelElements(this.level.getLevel(this.difficulty))
+
+			this.app.stage.addChild(...this.board.elements)
+			this.app.stage.addChild(...this.level.elements)
+		}
+	}
+
+	exit() {
+		this.clearCanvas()
+		this.difficulty = 0
+		this.hideMenu()
+		document.querySelector('.greeting-banner').style.display = 'flex'
+	}
 
 	menuController(event) {
 		const choice = event.target.innerHTML.slice(0, 4).toLowerCase()
@@ -288,21 +260,7 @@ class Game {
 
 	start() {
 		this.app.ticker.add(() => {
-			game.update()
+			this.update()
 		})
 	}
 }
-
-// Init the game start
-const game = new Game()
-game.start()
-
-// Mouse listeners
-game.app.view.addEventListener('mousedown', game.handleMouseDown.bind(game))
-game.app.view.addEventListener('mouseup', game.handleMouseUp.bind(game))
-game.app.view.addEventListener('mousemove', game.handleMouseMove.bind(game))
-
-// Menu listener
-document
-	.querySelector('#menu-elements')
-	.addEventListener('click', game.menuController.bind(game))
