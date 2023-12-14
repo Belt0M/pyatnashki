@@ -12,9 +12,6 @@ class Game {
 
 		this.gameField.appendChild(this.app.view)
 
-		this.board = new Board()
-		this.level = new LevelManager()
-
 		this.completedElements = {
 			water: false,
 			fire: false,
@@ -24,8 +21,20 @@ class Game {
 		this.activeElement = null
 	}
 
-	startGame() {
+	async startGame() {
 		// Generate and add to the scene the board elements
+		console.log(`${/(.*)\//.exec(window.document.location.href)[0]}`)
+		this.board = new Board()
+		await this.board.doGET(
+			`${/(.*)\//.exec(window.document.location.href)[0]}/matrices/board.json`
+		)
+
+		this.level = new LevelManager()
+		await this.level.doGET(
+			`${/(.*)\//.exec(window.document.location.href)[0]}/matrices/levels.json`
+		)
+
+		console.log(this.board.elements)
 		this.board.generateBoard()
 		this.app.stage.addChild(...this.board.elements)
 

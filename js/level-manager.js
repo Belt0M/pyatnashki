@@ -1,52 +1,5 @@
-const levels = JSON.parse(`[
-	{
-		"matrix": [
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, "earth", 0, 0, 0, 0, "fire", 0, 0, 0],
-			[0, 0, 0, "block", 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, "block", 0, 0],
-			[0, 0, 0, "air", 0, 0, 0, 0, 0, 0, 0],
-			[0, "block", 0, 0, 0, 0, 0, "water", 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-		]
-	},
-	{
-		"matrix": [
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, "wood", 0, 0, 0, 0, "fire", 0, 0, 0],
-			[0, 0, 0, "earth", 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, "water", 0, 0],
-			[0, 0, 0, "air", 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, "block", 0, 0, 0, "wood", 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-		]
-	},
-	{
-		"matrix": [
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, "wood", 0, 0, 0, 0, 0, "wood", 0, 0],
-			[0, 0, "wood", 0, 0, 0, 0, "earth", "wood", 0, 0],
-			[0, 0, 0, "water", 0, 0, 0, 0, "block", 0, 0],
-			[0, 0, "block", 0, 0, "block", 0, "block", "fire", 0, 0],
-			[0, 0, 0, "air", 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, "block", 0, 0, 0, "wood", 0, 0, 0],
-			[0, 0, "wood", 0, 0, 0, 0, 0, "wood", 0, 0],
-			[0, 0, "wood", 0, 0, 0, 0, 0, "wood", 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-		]
-	}
-]
-`)
-
 class LevelManager {
 	constructor() {
-		this.levels = levels
 		this.elements = []
 	}
 
@@ -74,21 +27,22 @@ class LevelManager {
 		}
 	}
 	doGET(path) {
-		var req = new XMLHttpRequest()
-		req.overrideMimeType('application/json')
-		req.open('GET', path, true)
-		req.onload = () => {
-			if (req.status === 200) {
-				this.levels = JSON.parse(req.responseText)
-			} else {
-				console.error(
-					`Failed to fetch data from ${path}. Status: ${req.status}`
-				)
+		return new Promise((resolve, reject) => {
+			var req = new XMLHttpRequest()
+			req.overrideMimeType('application/json')
+			req.open('GET', path, true)
+			req.onload = () => {
+				if (req.status === 200) {
+					this.levels = JSON.parse(req.responseText)
+					resolve()
+				} else {
+					reject(`Failed to fetch data from ${path}. Status: ${req.status}`)
+				}
 			}
-		}
-		req.onerror = () => {
-			console.error(`Network error while trying to fetch data from ${path}`)
-		}
-		req.send(null)
+			req.onerror = () => {
+				reject(`Network error while trying to fetch data from ${path}`)
+			}
+			req.send(null)
+		})
 	}
 }
