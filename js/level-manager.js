@@ -38,11 +38,19 @@ class LevelManager {
 				newEl.type = value
 				if (value === this.enums.border.id) {
 					newEl.alpha = 0
+					newEl.zIndex = 0
+				} else if (value === this.enums.cell.id) {
+					newEl.zIndex = 0
+				} else {
+					newEl.zIndex = 100
 				}
 				this.elements.push(newEl)
 				newEl.position.set(125 + el * TILE_SIZE, 35 + row * TILE_SIZE)
 			}
 		}
+		this.elements.sort((a, b) => {
+			return a.type - b.type
+		})
 	}
 	// Find the level element by its ID
 	findUrlById(id) {

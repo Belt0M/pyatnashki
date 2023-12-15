@@ -86,55 +86,51 @@ class Game {
 
 	// Element movements handling on mouse move
 	handleMouseMove(event) {
-		// Checking if an active element exists and not yet completed
-		if (
-			this.activeElement &&
-			!this.completedElements[this.activeElement.type]
-		) {
-			// Calculate the mouse and the delta of the current element
-			const deltaX =
-				event.clientX -
-				this.gameField.offsetLeft -
-				this.activeElement.position.x
-			const deltaY =
-				event.clientY - this.gameField.offsetTop - this.activeElement.position.y
-			// Check if the movement is horizontal or vertical
-			const isHorizontalMovement = Math.abs(deltaX) > Math.abs(deltaY)
-			const isVerticalMovement = Math.abs(deltaY) > Math.abs(deltaX)
+		if (this.activeElement) {
+			const dx =
+				event.clientX - this.gameField.offsetLeft - 35 - this.activeElement.x
+			const dy =
+				event.clientY - this.gameField.offsetTop - 35 - this.activeElement.y
+			if (Math.abs(dx) > Math.abs(dy)) {
+				// Horizontal movement
+				let sign = Math.sign(dx)
+				if (
+					Math.abs(this.activeElement.y - 385) % TILE_SIZE === 0 &&
+					Math.abs(dx) > 35
+				) {
+					this.activeElement.x += 2 * sign
+				} else if (Math.abs(dx) > 35) {
+					const diffT = (this.activeElement.y - 35) % TILE_SIZE
+					const diffB = TILE_SIZE - diffT
 
-			// Update the element's position based on the movement direction
-			const activeElPosition = this.activeElement.position
-			if (isHorizontalMovement) {
-				const sign = Math.sign(deltaX)
-				if (deltaX > sign * TILE_SIZE) {
-					// Check collision
-					if (
-						this.checkCollision(
-							activeElPosition.x + sign * TILE_SIZE,
-							activeElPosition.y
-						)
-					) {
-						return
+					if (diffT < 30 && diffT > 0) {
+						this.activeElement.y -= diffT
+					} else if (diffB < 30 && diffB > 0) {
+						this.activeElement.y += diffB
 					}
-
-					activeElPosition.x += sign * TILE_SIZE
 				}
-			} else if (isVerticalMovement) {
-				const sign = Math.sign(deltaY)
-				if (deltaY > sign * TILE_SIZE) {
-					// Check collision
-					if (
-						this.checkCollision(
-							activeElPosition.x,
-							activeElPosition.y + sign * TILE_SIZE
-						)
-					) {
-						return
-					}
+			} else if (Math.abs(dx) < Math.abs(dy)) {
+				// Vertical movement
+				const sign = Math.sign(dy)
+				if (
+					Math.abs(this.activeElement.x - 195) % TILE_SIZE === 0 &&
+					Math.abs(dy) > 35
+				) {
+					this.activeElement.y += 2 * sign
+				} else if (Math.abs(dy) > 35) {
+					const diffR = (this.activeElement.x - 55) % TILE_SIZE
+					const diffL = TILE_SIZE - diffR
+					console.log(diffR, diffL)
 
-					activeElPosition.y += sign * TILE_SIZE
+					if (diffR < 30 && diffR > 0) {
+						this.activeElement.x -= diffR
+					} else if (diffL < 30 && diffL > 0) {
+						this.activeElement.x += diffL
+					}
 				}
 			}
+
+			// Check for collisions and update position
 		}
 	}
 
