@@ -55,7 +55,9 @@ class Game {
 				element.y <= event.clientY - this.gameField.offsetTop &&
 				element.getBounds().y + TILE_SIZE >=
 					event.clientY - this.gameField.offsetTop &&
-				element.zOrder !== -5
+				element.zOrder !== -5 &&
+				element.alpha === 1 &&
+				element.type !== 1
 		)
 	}
 
@@ -63,6 +65,7 @@ class Game {
 	handleMouseDown(event) {
 		const element = this.findSelectedElement(event)
 		const enums = this.params.elements
+		console.log(element, element.x, element.y, 'type: ', element.type)
 		const allowedElements = [
 			enums.wood.id,
 			enums.air.id,
@@ -70,6 +73,7 @@ class Game {
 			enums.fire.id,
 			enums.earth.id,
 		]
+
 		if (element && allowedElements.includes(element.type)) {
 			this.activeElement = element
 			this.activeElement.alpha = 0.75
@@ -98,7 +102,14 @@ class Game {
 					Math.abs(this.activeElement.y - 385) % TILE_SIZE === 0 &&
 					Math.abs(dx) > 35
 				) {
-					this.activeElement.x += 2 * sign
+					if (
+						!this.checkCollision(
+							this.activeElement.x + 5 * sign,
+							this.activeElement.y
+						)
+					) {
+						this.activeElement.x += 5 * sign
+					}
 				} else if (Math.abs(dx) > 35) {
 					const diffT = (this.activeElement.y - 35) % TILE_SIZE
 					const diffB = TILE_SIZE - diffT
@@ -116,11 +127,17 @@ class Game {
 					Math.abs(this.activeElement.x - 195) % TILE_SIZE === 0 &&
 					Math.abs(dy) > 35
 				) {
-					this.activeElement.y += 2 * sign
+					if (
+						!this.checkCollision(
+							this.activeElement.x,
+							this.activeElement.y + 5 * sign
+						)
+					) {
+						this.activeElement.y += 5 * sign
+					}
 				} else if (Math.abs(dy) > 35) {
 					const diffR = (this.activeElement.x - 55) % TILE_SIZE
 					const diffL = TILE_SIZE - diffR
-					console.log(diffR, diffL)
 
 					if (diffR < 30 && diffR > 0) {
 						this.activeElement.x -= diffR
@@ -137,35 +154,35 @@ class Game {
 	// Check for collisions with prohibited items for passage
 	checkCollision(x, y) {
 		// Create array with all level elements except active one
-		// const elementsArray = ['block', 'wood', 'water', 'fire', 'earth', 'air']
-		// this.activeElement.type !== 'wood' &&
-		// 	elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
+		const elementsArray = [0, 2, 3, 4, 5, 6, 7]
+		this.activeElement.type !== 3 &&
+			elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
+		// Check for collisions with level elements
+		for (const element of this.level.elements) {
+			if (
+				x + TILE_SIZE > element.x &&
+				x < element.x + TILE_SIZE &&
+				y + TILE_SIZE > element.y &&
+				y < element.y + TILE_SIZE &&
+				elementsArray.includes(element.type)
+			) {
+				console.log('col')
+				console.log(x, y, element.x, element.y, element.type)
+				return true
+			} else if (
+				x + TILE_SIZE > element.x &&
+				x < element.x + TILE_SIZE &&
+				y + TILE_SIZE > element.y &&
+				y < element.y + TILE_SIZE &&
+				element.type === this.activeElement.type &&
+				this.activeElement.alpha === 0.7
+			) {
+				this.completedElements[element.type] = true
+				// Check whether all elements are completed
+				this.checkIsLevelCompleted()
+			}
+		}
 
-		// // Check for collisions with board elements and is the element completed
-		// for (const element of this.board.elements) {
-		// 	if (element.type === 0 && element.x === x && element.y === y) {
-		// 		return true
-		// 	} else if (
-		// 		element.x === x &&
-		// 		element.y === y &&
-		// 		element.type === this.activeElement.type
-		// 	) {
-		// 		this.completedElements[element.type] = true
-		// 		// Check whether all elements are completed
-		// 		this.checkIsLevelCompleted()
-		// 	}
-		// }
-
-		// // Check for collisions with level elements
-		// for (const element of this.level.elements) {
-		// 	if (
-		// 		elementsArray.includes(element.type) &&
-		// 		element.x === x &&
-		// 		element.y === y
-		// 	) {
-		// 		return true
-		// 	}
-		// }
 		return false
 	}
 

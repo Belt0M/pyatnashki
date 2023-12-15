@@ -39,10 +39,13 @@ class LevelManager {
 				if (value === this.enums.border.id) {
 					newEl.alpha = 0
 					newEl.zIndex = 0
-				} else if (value === this.enums.cell.id) {
-					newEl.zIndex = 0
-				} else {
-					newEl.zIndex = 100
+				}
+
+				if (
+					(row === 1 || row === matrix.length - 2) &&
+					[4, 5, 6, 7].includes(value)
+				) {
+					newEl.alpha = 0.7
 				}
 				this.elements.push(newEl)
 				newEl.position.set(125 + el * TILE_SIZE, 35 + row * TILE_SIZE)
