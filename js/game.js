@@ -1,3 +1,10 @@
+class GameSession {
+	constructor() {
+		this.game = {}
+		this.gui = {}
+	}
+}
+
 class Game {
 	constructor() {
 		// Init the Pixi canvas
@@ -12,32 +19,30 @@ class Game {
 
 		this.gameField.appendChild(this.app.view)
 
-		this.completedElements = {
-			water: false,
-			fire: false,
-			earth: false,
-			air: false,
-		}
-		this.activeElement = null
+		this.isLoading = true
+
+		this.fetchParams(`${BASE_URL}/matrices/game.json`, () => {
+			this.completedElements = {
+				4: false,
+				5: false,
+				6: false,
+				7: false,
+			}
+
+			this.activeElement = null
+		})
 	}
 
-	async startGame() {
-		// Generate and add to the scene the board elements
-		console.log(`${/(.*)\//.exec(window.document.location.href)[0]}`)
-		this.board = new Board()
-		await this.board.doGET(`${BASE_URL}/matrices/board.json`)
-
+	startGame() {
 		this.level = new LevelManager()
-		await this.level.doGET(`${BASE_URL}/matrices/levels.json`)
-
-		console.log(this.board.elements)
-		this.board.generateBoard()
-		this.app.stage.addChild(...this.board.elements)
+		this.level.urls = this.params.levels
+		this.level.enums = this.params.elements
 
 		// Generate and add the level elements to the scene
 		this.difficulty = 0
-		this.level.generateLevelElements(this.level.getLevel(this.difficulty))
-		this.app.stage.addChild(...this.level.elements)
+		this.level.getLevel(this.difficulty, elements => {
+			this.app.stage.addChild(...elements)
+		})
 	}
 
 	// Find dragged element
@@ -49,15 +54,23 @@ class Game {
 					event.clientX - this.gameField.offsetLeft &&
 				element.y <= event.clientY - this.gameField.offsetTop &&
 				element.getBounds().y + TILE_SIZE >=
-					event.clientY - this.gameField.offsetTop
+					event.clientY - this.gameField.offsetTop &&
+				element.zOrder !== -5
 		)
 	}
 
 	// Om mouse down select element for future movements
 	handleMouseDown(event) {
 		const element = this.findSelectedElement(event)
-
-		if (element && element.type !== 'block') {
+		const enums = this.params.elements
+		const allowedElements = [
+			enums.wood.id,
+			enums.air.id,
+			enums.water.id,
+			enums.fire.id,
+			enums.earth.id,
+		]
+		if (element && allowedElements.includes(element.type)) {
 			this.activeElement = element
 			this.activeElement.alpha = 0.75
 		}
@@ -85,7 +98,6 @@ class Game {
 				this.activeElement.position.x
 			const deltaY =
 				event.clientY - this.gameField.offsetTop - this.activeElement.position.y
-
 			// Check if the movement is horizontal or vertical
 			const isHorizontalMovement = Math.abs(deltaX) > Math.abs(deltaY)
 			const isVerticalMovement = Math.abs(deltaY) > Math.abs(deltaX)
@@ -129,35 +141,35 @@ class Game {
 	// Check for collisions with prohibited items for passage
 	checkCollision(x, y) {
 		// Create array with all level elements except active one
-		const elementsArray = ['block', 'wood', 'water', 'fire', 'earth', 'air']
-		this.activeElement.type !== 'wood' &&
-			elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
+		// const elementsArray = ['block', 'wood', 'water', 'fire', 'earth', 'air']
+		// this.activeElement.type !== 'wood' &&
+		// 	elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
 
-		// Check for collisions with board elements and is the element completed
-		for (const element of this.board.elements) {
-			if (element.type === 0 && element.x === x && element.y === y) {
-				return true
-			} else if (
-				element.x === x &&
-				element.y === y &&
-				element.type === this.activeElement.type
-			) {
-				this.completedElements[element.type] = true
-				// Check whether all elements are completed
-				this.checkIsLevelCompleted()
-			}
-		}
+		// // Check for collisions with board elements and is the element completed
+		// for (const element of this.board.elements) {
+		// 	if (element.type === 0 && element.x === x && element.y === y) {
+		// 		return true
+		// 	} else if (
+		// 		element.x === x &&
+		// 		element.y === y &&
+		// 		element.type === this.activeElement.type
+		// 	) {
+		// 		this.completedElements[element.type] = true
+		// 		// Check whether all elements are completed
+		// 		this.checkIsLevelCompleted()
+		// 	}
+		// }
 
-		// Check for collisions with level elements
-		for (const element of this.level.elements) {
-			if (
-				elementsArray.includes(element.type) &&
-				element.x === x &&
-				element.y === y
-			) {
-				return true
-			}
-		}
+		// // Check for collisions with level elements
+		// for (const element of this.level.elements) {
+		// 	if (
+		// 		elementsArray.includes(element.type) &&
+		// 		element.x === x &&
+		// 		element.y === y
+		// 	) {
+		// 		return true
+		// 	}
+		// }
 		return false
 	}
 
@@ -198,10 +210,10 @@ class Game {
 		this.board.elements = []
 		this.level.elements = []
 		this.completedElements = {
-			air: false,
-			earth: false,
-			fire: false,
-			water: false,
+			4: false,
+			5: false,
+			6: false,
+			7: false,
 		}
 	}
 
@@ -262,5 +274,26 @@ class Game {
 		this.app.ticker.add(() => {
 			this.update()
 		})
+	}
+
+	fetchParams(path, callback) {
+		var req = new XMLHttpRequest()
+		req.overrideMimeType('application/json')
+		req.open('GET', path, true)
+		req.onload = () => {
+			if (req.status === 200) {
+				this.params = JSON.parse(req.responseText)
+				this.isLoading = false
+				callback && callback()
+			} else {
+				console.error(
+					`Failed to fetch data from ${path}. Status: ${req.status}`
+				)
+			}
+		}
+		req.onerror = () => {
+			console.error(`Network error while trying to fetch data from ${path}`)
+		}
+		req.send(null)
 	}
 }

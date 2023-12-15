@@ -5,9 +5,7 @@ class Board {
 
 	// Generate common board structure
 	generateBoard() {
-		console.log('2', this.matrix)
 		const matrix = this.matrix
-		console.log(matrix)
 		for (let row = 0; row < matrix.length; row++) {
 			for (let el = 0; el < matrix[row].length; el++) {
 				const value = matrix[row][el]
@@ -44,7 +42,6 @@ class Board {
 			req.onload = () => {
 				if (req.status === 200) {
 					this.matrix = JSON.parse(req.responseText)
-					console.log(this.matrix)
 					resolve()
 				} else {
 					reject(`Failed to fetch data from ${path}. Status: ${req.status}`)

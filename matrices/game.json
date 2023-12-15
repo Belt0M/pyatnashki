@@ -1,0 +1,37 @@
+{
+	"elements": {
+		"border": {
+			"id": 0,
+			"url": "assets/sprites/main.png"
+		},
+		"cell": {
+			"id": 1,
+			"url": "assets/sprites/cell.png"
+		},
+		"stone": {
+			"id": 2,
+			"url": "assets/sprites/stone.png"
+		},
+		"wood": {
+			"id": 3,
+			"url": "assets/sprites/wood.png"
+		},
+		"water": {
+			"id": 4,
+			"url": "assets/sprites/water.png"
+		},
+		"air": {
+			"id": 5,
+			"url": "assets/sprites/air.png"
+		},
+		"fire": {
+			"id": 6,
+			"url": "assets/sprites/fire.png"
+		},
+		"earth": {
+			"id": 7,
+			"url": "assets/sprites/earth.png"
+		}
+	},
+	"levels": ["level1.json", "level2.json", "level3.json"]
+}
