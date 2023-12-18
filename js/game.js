@@ -1,7 +1,111 @@
 class GameSession {
 	constructor() {
-		this.game = {}
-		this.gui = {}
+		this.game = new Game()
+		this.gui = new GUICore(this)
+
+		// Start game listener
+		document
+			.querySelector('.greeting-banner span')
+			.addEventListener('click', () => this.game.startGame())
+
+		// Mouse listeners
+		this.game.app.view.addEventListener(
+			'mousedown',
+			this.game.handleMouseDown.bind(this.game)
+		)
+		this.game.app.view.addEventListener(
+			'mouseup',
+			this.game.handleMouseUp.bind(this.game)
+		)
+		this.game.app.view.addEventListener(
+			'mousemove',
+			this.game.handleMouseMove.bind(this.game)
+		)
+
+		// Menu listener
+		document
+			.querySelector('#menu-elements')
+			.addEventListener('click', this.gui.menuController.bind(this.gui))
+
+		// Game over listener
+		document
+			.querySelector('.game-over')
+			.addEventListener('click', () => this.game.hideGameOver())
+	}
+}
+
+class GUICore {
+	constructor(session) {
+		this.session = session
+	}
+
+	menuController(event) {
+		const choice = event.target.innerHTML.slice(0, 4).toLowerCase()
+		console.log(this)
+		switch (choice) {
+			case 'next':
+				this.nextLevel()
+				break
+			case 'prev':
+				this.prevLevel()
+				break
+			case 'exit':
+				this.exit()
+				break
+		}
+	}
+
+	nextLevel() {
+		if (
+			this.session.game.difficulty + 1 <
+			this.session.game.params.levels.length
+		) {
+			this.session.game.difficulty += 1
+
+			this.session.game.clearCanvas()
+			this.session.game.hideMenu()
+
+			// Update timer
+			this.session.game.remainingTime =
+				this.session.game.params.timers[this.session.game.difficulty]
+			this.session.game.startTimer()
+
+			this.session.game.level.getLevel(
+				this.session.game.difficulty,
+				elements => {
+					this.session.game.app.stage.addChild(...elements)
+				}
+			)
+		}
+	}
+
+	prevLevel() {
+		console.log(this, this.session)
+		if (this.session.game.difficulty - 1 >= 0) {
+			this.session.game.difficulty -= 1
+
+			this.session.game.clearCanvas()
+			this.session.game.hideMenu()
+
+			// Update timer
+			this.session.game.remainingTime =
+				this.session.game.params.timers[this.session.game.difficulty]
+			this.session.game.startTimer()
+
+			this.session.game.level.getLevel(
+				this.session.game.difficulty,
+				elements => {
+					this.session.game.app.stage.addChild(...elements)
+				}
+			)
+		}
+	}
+
+	exit() {
+		this.session.game.clearCanvas()
+		this.session.game.difficulty = 0
+		this.session.game.hideMenu()
+		document.querySelector('.greeting-banner').style.display = 'flex'
 	}
 }
 
@@ -48,7 +152,6 @@ class Game {
 			if (this.remainingTime <= 0) {
 				this.stopTimer()
 				this.showMenu()
-				this.menu.style.display = 'flex'
 			}
 		}, 1000)
 	}
@@ -59,6 +162,7 @@ class Game {
 
 	// Start the game method
 	startGame() {
+		document.querySelector('.greeting-banner').style.display = 'none'
 		this.level = new LevelManager()
 		this.level.urls = this.params.levels
 		this.level.enums = this.params.elements
@@ -71,10 +175,6 @@ class Game {
 
 		this.remainingTime = this.params.timers[this.difficulty]
 		this.startTimer() // Start the timer when the game starts
-
-		this.app.ticker.add(() => {
-			this.update()
-		})
 	}
 
 	// Find dragged element
@@ -149,38 +249,39 @@ class Game {
 	}
 
 	followCursor() {
-		const elemX = Math.ceil(game.activeElement.x)
-		const elemY = Math.ceil(game.activeElement.y)
-		const dirX = Math.sign(game.cursorX - elemX)
-		const dirY = Math.sign(game.cursorY - elemY)
-		const multiplier = 0.05
-		//  -55 -35
-		if (game.activeElement) {
+		console.log(game.game)
+		if (game.game.activeElement) {
+			const elemX = Math.ceil(game.game.activeElement.x)
+			const elemY = Math.ceil(game.game.activeElement.y)
+			const dirX = Math.sign(game.game.cursorX - elemX)
+			const dirY = Math.sign(game.game.cursorY - elemY)
+			const multiplier = 0.025
+
 			const formattedX = Math.ceil(
-				game.cursorX - ((game.cursorX - 55) % TILE_SIZE)
+				game.game.cursorX - ((game.game.cursorX - 55) % TILE_SIZE)
 			)
 			const formattedY = Math.ceil(
-				game.cursorY - ((game.cursorY - 35) % TILE_SIZE)
+				game.game.cursorY - ((game.game.cursorY - 35) % TILE_SIZE)
 			)
 
 			console.log(
-				game.activeElement.x,
+				game.game.activeElement.x,
 				elemX,
-				!game.checkCollision(elemX + multiplier * dirX, elemY)
+				!game.game.checkCollision(elemX + multiplier * dirX, elemY)
 			)
 			if (
 				elemX !== formattedX &&
-				!game.checkCollision(elemX + multiplier * dirX, elemY) &&
-				(game.activeElement.y - 35) % TILE_SIZE === 0
+				!game.game.checkCollision(elemX + multiplier * dirX, elemY) &&
+				(game.game.activeElement.y - 35) % TILE_SIZE === 0
 			) {
-				game.activeElement.x += multiplier * dirX
+				game.game.activeElement.x += multiplier * dirX
 			} else if (
 				elemX === formattedX &&
 				elemY !== formattedY &&
-				!game.checkCollision(elemX, elemY + multiplier * dirY) &&
-				(game.activeElement.x - 55) % TILE_SIZE === 0
+				!game.game.checkCollision(elemX, elemY + multiplier * dirY) &&
+				(game.game.activeElement.x - 55) % TILE_SIZE === 0
 			) {
-				game.activeElement.y += multiplier * dirY
+				game.game.activeElement.y += multiplier * dirY
 			}
 		}
 	}
@@ -355,6 +456,10 @@ class Game {
 		document.querySelector('.game-over').style.display = 'flex'
 	}
 
+	hideGameOver() {
+		document.querySelector('.game-over').style.display = 'none'
+	}
+
 	showMenu() {
 		if (this.difficulty + 1 === this.params.levels.length) {
 			this.showGameOver()
@@ -384,65 +489,6 @@ class Game {
 			7: false,
 		}
 	}
-
-	nextLevel() {
-		if (this.difficulty + 1 < this.params.levels.length) {
-			this.difficulty += 1
-
-			this.clearCanvas()
-			this.hideMenu()
-
-			// Update timer
-			this.remainingTime = this.params.timers[this.difficulty]
-			this.startTimer()
-
-			this.level.getLevel(this.difficulty, elements => {
-				this.app.stage.addChild(...elements)
-			})
-		}
-	}
-
-	prevLevel() {
-		if (this.difficulty - 1 >= 0) {
-			this.difficulty -= 1
-
-			this.clearCanvas()
-			this.hideMenu()
-
-			// Update timer
-			this.remainingTime = this.params.timers[this.difficulty]
-			this.startTimer()
-
-			this.level.getLevel(this.difficulty, elements => {
-				this.app.stage.addChild(...elements)
-			})
-		}
-	}
-
-	exit() {
-		this.clearCanvas()
-		this.difficulty = 0
-		this.hideMenu()
-		document.querySelector('.greeting-banner').style.display = 'flex'
-	}
-
-	menuController(event) {
-		const choice = event.target.innerHTML.slice(0, 4).toLowerCase()
-
-		switch (choice) {
-			case 'next':
-				this.nextLevel()
-				break
-			case 'prev':
-				this.prevLevel()
-				break
-			case 'exit':
-				this.exit()
-				break
-		}
-	}
-
-	update() {}
 
 	fetchParams(path, callback) {
 		var req = new XMLHttpRequest()
