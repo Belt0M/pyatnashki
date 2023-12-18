@@ -122,13 +122,15 @@ class Game {
 
 			if (
 				elemX !== formattedX &&
-				!game.checkCollision(elemX + multiplier * dirX, elemY)
+				!game.checkCollision(elemX + multiplier * dirX, elemY) &&
+				(game.activeElement.y - 35) % TILE_SIZE === 0
 			) {
 				game.activeElement.x += multiplier * dirX
 			} else if (
 				elemX === formattedX &&
 				elemY !== formattedY &&
-				!game.checkCollision(elemX, elemY + multiplier * dirY)
+				!game.checkCollision(elemX, elemY + multiplier * dirY) &&
+				(game.activeElement.x - 55) % TILE_SIZE === 0
 			) {
 				game.activeElement.y += multiplier * dirY
 				console.log(game.activeElement.y)
@@ -187,12 +189,21 @@ class Game {
 						this.activeElement.x += 10 * sign
 					}
 				} else if (Math.abs(dx) > 35) {
+					// Edges cutting functionality
+					const direction =
+						event.clientY - this.gameField.offsetTop <=
+						this.activeElement.y + 35
+							? -1
+							: event.clientY - this.gameField.offsetTop >
+							  this.activeElement.y - 35
+							? 1
+							: 0
 					const diffT = (this.activeElement.y - 35) % TILE_SIZE
 					const diffB = TILE_SIZE - diffT
 
-					if (diffT <= 35 && diffT > 0) {
+					if (direction === -1 && diffT > 0) {
 						this.activeElement.y -= diffT
-					} else if (diffB < 35 && diffB > 0) {
+					} else if (direction === 1 && diffB > 0) {
 						this.activeElement.y += diffB
 					}
 				}
@@ -212,13 +223,23 @@ class Game {
 						this.activeElement.y += 10 * sign
 					}
 				} else if (Math.abs(dy) > 35) {
-					const diffR = (this.activeElement.x - 55) % TILE_SIZE
-					const diffL = TILE_SIZE - diffR
+					// Edges cutting functionality
+					const direction =
+						event.clientX - this.gameField.offsetLeft <=
+						this.activeElement.x + 35
+							? -1
+							: event.clientX - this.gameField.offsetLeft >
+							  this.activeElement.x - 35
+							? 1
+							: 0
 
-					if (diffR <= 35 && diffR > 0) {
-						this.activeElement.x -= diffR
-					} else if (diffL < 35 && diffL > 0) {
-						this.activeElement.x += diffL
+					const diffL = (this.activeElement.x - 55) % TILE_SIZE
+					const diffR = TILE_SIZE - diffL
+
+					if (direction === -1 && diffL > 0) {
+						this.activeElement.x -= diffL
+					} else if (direction === 1 && diffR > 0) {
+						this.activeElement.x += diffR
 					}
 				}
 			}
