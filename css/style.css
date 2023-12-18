@@ -81,6 +81,16 @@ body {
 	height: auto;
 }
 
+.game-timer {
+	position: absolute;
+	top: 2rem;
+	right: 3rem;
+	display: flex;
+	font-size: 3rem;
+	font-style: 600;
+	color: #fff;
+}
+
 .greeting-banner {
 	position: absolute;
 	inset: 0;

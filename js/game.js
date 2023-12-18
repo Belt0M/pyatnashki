@@ -19,8 +19,6 @@ class Game {
 
 		this.gameField.appendChild(this.app.view)
 
-		this.interval = null
-
 		this.fetchParams(`${BASE_URL}/matrices/game.json`, () => {
 			this.completedElements = {
 				4: false,
@@ -31,8 +29,35 @@ class Game {
 
 			this.activeElement = null
 		})
+
+		this.timer = null
+		this.timerBody = document.querySelector('.game-timer')
 	}
 
+	// Start - stop timer functionality
+	startTimer() {
+		this.timer = setInterval(() => {
+			this.remainingTime--
+
+			const min = Math.floor(this.remainingTime / 60)
+			const sec = this.remainingTime - 60 * min
+			this.timerBody.innerHTML = `${min < 10 ? '0' + min : min}:${
+				sec < 10 ? '0' + sec : sec
+			}`
+
+			if (this.remainingTime <= 0) {
+				this.stopTimer()
+				this.showMenu()
+				this.menu.style.display = 'flex'
+			}
+		}, 1000)
+	}
+
+	stopTimer() {
+		clearInterval(this.timer)
+	}
+
+	// Start the game method
 	startGame() {
 		this.level = new LevelManager()
 		this.level.urls = this.params.levels
@@ -43,6 +68,9 @@ class Game {
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements)
 		})
+
+		this.remainingTime = this.params.timers[this.difficulty]
+		this.startTimer() // Start the timer when the game starts
 
 		this.app.ticker.add(() => {
 			this.update()
@@ -318,6 +346,7 @@ class Game {
 			element => element === true
 		)
 		if (allElementsCompleted) {
+			this.stopTimer()
 			this.showMenu()
 		}
 	}
@@ -359,8 +388,13 @@ class Game {
 	nextLevel() {
 		if (this.difficulty + 1 < this.params.levels.length) {
 			this.difficulty += 1
+
 			this.clearCanvas()
 			this.hideMenu()
+
+			// Update timer
+			this.remainingTime = this.params.timers[this.difficulty]
+			this.startTimer()
 
 			this.level.getLevel(this.difficulty, elements => {
 				this.app.stage.addChild(...elements)
@@ -371,8 +405,13 @@ class Game {
 	prevLevel() {
 		if (this.difficulty - 1 >= 0) {
 			this.difficulty -= 1
+
 			this.clearCanvas()
 			this.hideMenu()
+
+			// Update timer
+			this.remainingTime = this.params.timers[this.difficulty]
+			this.startTimer()
 
 			this.level.getLevel(this.difficulty, elements => {
 				this.app.stage.addChild(...elements)
@@ -404,12 +443,6 @@ class Game {
 	}
 
 	update() {}
-
-	// start() {
-	// 	this.app.ticker.add(() => {
-	// 		this.update()
-	// 	})
-	// }
 
 	fetchParams(path, callback) {
 		var req = new XMLHttpRequest()

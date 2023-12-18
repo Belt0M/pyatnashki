@@ -33,5 +33,6 @@
 			"url": "assets/sprites/earth.png"
 		}
 	},
-	"levels": ["level1.json", "level2.json", "level3.json"]
+	"levels": ["level1.json", "level2.json", "level3.json"],
+	"timers": [90, 45, 15]
 }
