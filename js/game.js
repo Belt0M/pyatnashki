@@ -30,13 +30,14 @@ class GameSession {
 		// Game over listener
 		document
 			.querySelector('.game-over')
-			.addEventListener('click', () => this.game.hideGameOver())
+			.addEventListener('click', () => this.gui.hideGameOver())
 	}
 }
 
 class GUICore {
 	constructor(session) {
 		this.session = session
+		this.menu = document.querySelector('.menu-wrapper')
 	}
 
 	menuController(event) {
@@ -63,7 +64,7 @@ class GUICore {
 			this.session.game.difficulty += 1
 
 			this.session.game.clearCanvas()
-			this.session.game.hideMenu()
+			this.hideMenu()
 
 			// Update timer
 			this.session.game.remainingTime =
@@ -85,7 +86,7 @@ class GUICore {
 			this.session.game.difficulty -= 1
 
 			this.session.game.clearCanvas()
-			this.session.game.hideMenu()
+			this.hideMenu()
 
 			// Update timer
 			this.session.game.remainingTime =
@@ -104,8 +105,38 @@ class GUICore {
 	exit() {
 		this.session.game.clearCanvas()
 		this.session.game.difficulty = 0
-		this.session.game.hideMenu()
+		this.hideMenu()
 		document.querySelector('.greeting-banner').style.display = 'flex'
+	}
+
+	showMenu() {
+		if (
+			this.session.game.difficulty + 1 ===
+			this.session.game.params.levels.length
+		) {
+			this.showGameOver()
+			document.querySelector('#next').disabled = true
+			document.querySelector('#prev').disabled = false
+		} else if (this.session.game.difficulty === 0) {
+			document.querySelector('#next').disabled = false
+			document.querySelector('#prev').disabled = true
+		} else {
+			document.querySelector('#next').disabled = false
+			document.querySelector('#prev').disabled = false
+		}
+		this.menu.style.display = 'flex'
+	}
+
+	hideMenu() {
+		this.menu.style.display = 'none'
+	}
+
+	showGameOver() {
+		document.querySelector('.game-over').style.display = 'flex'
+	}
+
+	hideGameOver() {
+		document.querySelector('.game-over').style.display = 'none'
 	}
 }
 
@@ -119,7 +150,6 @@ class Game {
 		})
 
 		this.gameField = document.querySelector('.game-field')
-		this.menu = document.querySelector('.menu-wrapper')
 
 		this.gameField.appendChild(this.app.view)
 
@@ -151,7 +181,7 @@ class Game {
 
 			if (this.remainingTime <= 0) {
 				this.stopTimer()
-				this.showMenu()
+				game.gui.showMenu()
 			}
 		}, 1000)
 	}
@@ -448,35 +478,9 @@ class Game {
 		)
 		if (allElementsCompleted) {
 			this.stopTimer()
-			this.showMenu()
+			console.log(game, game.gui, game.gui)
+			game.gui.showMenu()
 		}
-	}
-
-	showGameOver() {
-		document.querySelector('.game-over').style.display = 'flex'
-	}
-
-	hideGameOver() {
-		document.querySelector('.game-over').style.display = 'none'
-	}
-
-	showMenu() {
-		if (this.difficulty + 1 === this.params.levels.length) {
-			this.showGameOver()
-			document.querySelector('#next').disabled = true
-			document.querySelector('#prev').disabled = false
-		} else if (this.difficulty === 0) {
-			document.querySelector('#next').disabled = false
-			document.querySelector('#prev').disabled = true
-		} else {
-			document.querySelector('#next').disabled = false
-			document.querySelector('#prev').disabled = false
-		}
-		this.menu.style.display = 'flex'
-	}
-
-	hideMenu() {
-		this.menu.style.display = 'none'
 	}
 
 	clearCanvas() {
