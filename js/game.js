@@ -39,7 +39,7 @@ class Game {
 		this.level.enums = this.params.elements
 
 		// Generate and add the level elements to the scene
-		this.difficulty = 1
+		this.difficulty = 0
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements)
 		})
@@ -94,11 +94,26 @@ class Game {
 			if (diffX !== 0) {
 				const sign = diffX >= TILE_SIZE / 2 ? 1 : -1
 				diffX = sign > 0 ? TILE_SIZE - diffX : diffX
-				this.activeElement.x += diffX * sign
+				if (
+					!this.checkCollision(
+						this.activeElement.x + diffX * sign,
+						this.activeElement.y
+					)
+				) {
+					this.activeElement.x += diffX * sign
+				}
 			} else if (diffY !== 0) {
 				const sign = diffY >= TILE_SIZE / 2 ? 1 : -1
 				diffY = sign > 0 ? TILE_SIZE - diffY : diffY
-				this.activeElement.y += diffY * sign
+
+				if (
+					!this.checkCollision(
+						this.activeElement.x,
+						this.activeElement.y + diffY * sign
+					)
+				) {
+					this.activeElement.y += diffY * sign
+				}
 			}
 			this.activeElement.alpha = 1
 			this.activeElement = null
@@ -120,6 +135,11 @@ class Game {
 				game.cursorY - ((game.cursorY - 35) % TILE_SIZE)
 			)
 
+			console.log(
+				game.activeElement.x,
+				elemX,
+				!game.checkCollision(elemX + multiplier * dirX, elemY)
+			)
 			if (
 				elemX !== formattedX &&
 				!game.checkCollision(elemX + multiplier * dirX, elemY) &&
@@ -133,7 +153,6 @@ class Game {
 				(game.activeElement.x - 55) % TILE_SIZE === 0
 			) {
 				game.activeElement.y += multiplier * dirY
-				console.log(game.activeElement.y)
 			}
 		}
 	}
@@ -173,7 +192,14 @@ class Game {
 				event.clientX - this.gameField.offsetLeft - 35 - this.activeElement.x
 			const dy =
 				event.clientY - this.gameField.offsetTop - 35 - this.activeElement.y
-			if (Math.abs(dx) > Math.abs(dy)) {
+			let signX = Math.sign(dx)
+			if (
+				Math.abs(dx) > 35 &&
+				!this.checkCollision(
+					this.activeElement.x + 10 * signX,
+					this.activeElement.y
+				)
+			) {
 				// Horizontal movement
 				let sign = Math.sign(dx)
 				if (
@@ -207,7 +233,7 @@ class Game {
 						this.activeElement.y += diffB
 					}
 				}
-			} else if (Math.abs(dx) < Math.abs(dy)) {
+			} else if (Math.abs(dy) > 35) {
 				// Vertical movement
 				const sign = Math.sign(dy)
 				if (
