@@ -2,7 +2,7 @@ const TILE_SIZE = 70
 
 // Init the game start
 const game = new Game()
-game.start()
+// game.start()
 
 // Mouse listeners
 game.app.view.addEventListener('mousedown', game.handleMouseDown.bind(game))

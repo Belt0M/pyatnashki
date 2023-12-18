@@ -19,7 +19,7 @@ class Game {
 
 		this.gameField.appendChild(this.app.view)
 
-		this.isLoading = true
+		this.interval = null
 
 		this.fetchParams(`${BASE_URL}/matrices/game.json`, () => {
 			this.completedElements = {
@@ -39,9 +39,13 @@ class Game {
 		this.level.enums = this.params.elements
 
 		// Generate and add the level elements to the scene
-		this.difficulty = 0
+		this.difficulty = 1
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements)
+		})
+
+		this.app.ticker.add(() => {
+			this.update()
 		})
 	}
 
@@ -65,7 +69,6 @@ class Game {
 	handleMouseDown(event) {
 		const element = this.findSelectedElement(event)
 		const enums = this.params.elements
-		console.log(element, element.x, element.y, 'type: ', element.type)
 		const allowedElements = [
 			enums.wood.id,
 			enums.air.id,
@@ -76,21 +79,94 @@ class Game {
 
 		if (element && allowedElements.includes(element.type)) {
 			this.activeElement = element
+			console.log(this.activeElement.x, this.activeElement.y)
 			this.activeElement.alpha = 0.75
 		}
 	}
 
 	// On mouse up reset the active element
 	handleMouseUp() {
+		this.stopFollowing()
 		if (this.activeElement) {
+			let diffX = Math.abs(this.activeElement.x - 55) % TILE_SIZE
+			let diffY = Math.abs(this.activeElement.y - 35) % TILE_SIZE
+			// Transfer the element to the nearest cell
+			if (diffX !== 0) {
+				const sign = diffX >= TILE_SIZE / 2 ? 1 : -1
+				diffX = sign > 0 ? TILE_SIZE - diffX : diffX
+				this.activeElement.x += diffX * sign
+			} else if (diffY !== 0) {
+				const sign = diffY >= TILE_SIZE / 2 ? 1 : -1
+				diffY = sign > 0 ? TILE_SIZE - diffY : diffY
+				this.activeElement.y += diffY * sign
+			}
 			this.activeElement.alpha = 1
 			this.activeElement = null
 		}
 	}
 
+	followCursor() {
+		const elemX = Math.ceil(game.activeElement.x)
+		const elemY = Math.ceil(game.activeElement.y)
+		const dirX = Math.sign(game.cursorX - elemX)
+		const dirY = Math.sign(game.cursorY - elemY)
+		const multiplier = 0.05
+		//  -55 -35
+		if (game.activeElement) {
+			const formattedX = Math.ceil(
+				game.cursorX - ((game.cursorX - 55) % TILE_SIZE)
+			)
+			const formattedY = Math.ceil(
+				game.cursorY - ((game.cursorY - 35) % TILE_SIZE)
+			)
+
+			if (
+				elemX !== formattedX &&
+				!game.checkCollision(elemX + multiplier * dirX, elemY)
+			) {
+				game.activeElement.x += multiplier * dirX
+			} else if (
+				elemX === formattedX &&
+				elemY !== formattedY &&
+				!game.checkCollision(elemX, elemY + multiplier * dirY)
+			) {
+				game.activeElement.y += multiplier * dirY
+				console.log(game.activeElement.y)
+			}
+		}
+	}
+
+	startFollowing() {
+		this.app.ticker.add(this.followCursor)
+	}
+
+	stopFollowing() {
+		this.app.ticker.remove(this.followCursor)
+	}
+
 	// Element movements handling on mouse move
 	handleMouseMove(event) {
-		if (this.activeElement) {
+		if (
+			this.activeElement &&
+			!this.completedElements[this.activeElement.type]
+		) {
+			const cursorX = event.clientX - this.gameField.offsetLeft
+			const cursorY = event.clientY - this.gameField.offsetTop
+
+			this.cursorX = cursorX
+			this.cursorY = cursorY
+
+			const isCursorOutside =
+				cursorX < this.activeElement.x - 100 ||
+				cursorX > this.activeElement.x + TILE_SIZE + 100 ||
+				cursorY < this.activeElement.y - 100 ||
+				cursorY > this.activeElement.y + TILE_SIZE + 100
+			if (isCursorOutside) {
+				this.startFollowing()
+			} else {
+				this.stopFollowing()
+			}
+
 			const dx =
 				event.clientX - this.gameField.offsetLeft - 35 - this.activeElement.x
 			const dy =
@@ -104,19 +180,19 @@ class Game {
 				) {
 					if (
 						!this.checkCollision(
-							this.activeElement.x + 5 * sign,
+							this.activeElement.x + 10 * sign,
 							this.activeElement.y
 						)
 					) {
-						this.activeElement.x += 5 * sign
+						this.activeElement.x += 10 * sign
 					}
 				} else if (Math.abs(dx) > 35) {
 					const diffT = (this.activeElement.y - 35) % TILE_SIZE
 					const diffB = TILE_SIZE - diffT
 
-					if (diffT < 30 && diffT > 0) {
+					if (diffT <= 35 && diffT > 0) {
 						this.activeElement.y -= diffT
-					} else if (diffB < 30 && diffB > 0) {
+					} else if (diffB < 35 && diffB > 0) {
 						this.activeElement.y += diffB
 					}
 				}
@@ -130,24 +206,22 @@ class Game {
 					if (
 						!this.checkCollision(
 							this.activeElement.x,
-							this.activeElement.y + 5 * sign
+							this.activeElement.y + 10 * sign
 						)
 					) {
-						this.activeElement.y += 5 * sign
+						this.activeElement.y += 10 * sign
 					}
 				} else if (Math.abs(dy) > 35) {
 					const diffR = (this.activeElement.x - 55) % TILE_SIZE
 					const diffL = TILE_SIZE - diffR
 
-					if (diffR < 30 && diffR > 0) {
+					if (diffR <= 35 && diffR > 0) {
 						this.activeElement.x -= diffR
-					} else if (diffL < 30 && diffL > 0) {
+					} else if (diffL < 35 && diffL > 0) {
 						this.activeElement.x += diffL
 					}
 				}
 			}
-
-			// Check for collisions and update position
 		}
 	}
 
@@ -155,31 +229,37 @@ class Game {
 	checkCollision(x, y) {
 		// Create array with all level elements except active one
 		const elementsArray = [0, 2, 3, 4, 5, 6, 7]
-		this.activeElement.type !== 3 &&
-			elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
+		elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
 		// Check for collisions with level elements
 		for (const element of this.level.elements) {
 			if (
-				x + TILE_SIZE > element.x &&
-				x < element.x + TILE_SIZE &&
-				y + TILE_SIZE > element.y &&
-				y < element.y + TILE_SIZE &&
-				elementsArray.includes(element.type)
+				element.type === this.activeElement.type &&
+				element.alpha === 0.7 &&
+				x === element.x &&
+				y === element.y
 			) {
-				console.log('col')
-				console.log(x, y, element.x, element.y, element.type)
-				return true
+				this.completedElements[element.type] = true
+				// Check whether all elements are completed
+				this.checkIsLevelCompleted()
 			} else if (
 				x + TILE_SIZE > element.x &&
 				x < element.x + TILE_SIZE &&
 				y + TILE_SIZE > element.y &&
 				y < element.y + TILE_SIZE &&
-				element.type === this.activeElement.type &&
-				this.activeElement.alpha === 0.7
+				elementsArray.includes(element.type) &&
+				element.alpha !== 0.7
 			) {
-				this.completedElements[element.type] = true
-				// Check whether all elements are completed
-				this.checkIsLevelCompleted()
+				return true
+			} else if (
+				this.activeElement.type === 3 &&
+				[3, 4, 5, 6, 7].includes(element.type) &&
+				(element.alpha === 0.7 || element.alpha !== 0.75) &&
+				x + TILE_SIZE > element.x &&
+				x < element.x + TILE_SIZE &&
+				y + TILE_SIZE > element.y &&
+				y < element.y + TILE_SIZE
+			) {
+				return true
 			}
 		}
 
@@ -200,7 +280,7 @@ class Game {
 	}
 
 	showMenu() {
-		if (this.difficulty + 1 >= this.level.levels.length) {
+		if (this.difficulty + 1 === this.params.levels.length) {
 			this.showGameOver()
 			document.querySelector('#next').disabled = true
 			document.querySelector('#prev').disabled = false
@@ -220,7 +300,6 @@ class Game {
 
 	clearCanvas() {
 		this.app.stage.children = []
-		this.board.elements = []
 		this.level.elements = []
 		this.completedElements = {
 			4: false,
@@ -231,16 +310,14 @@ class Game {
 	}
 
 	nextLevel() {
-		if (this.difficulty + 1 <= this.level.levels.length) {
+		if (this.difficulty + 1 < this.params.levels.length) {
 			this.difficulty += 1
 			this.clearCanvas()
 			this.hideMenu()
 
-			this.board.generateBoard()
-			this.level.generateLevelElements(this.level.getLevel(this.difficulty))
-
-			this.app.stage.addChild(...this.board.elements)
-			this.app.stage.addChild(...this.level.elements)
+			this.level.getLevel(this.difficulty, elements => {
+				this.app.stage.addChild(...elements)
+			})
 		}
 	}
 
@@ -250,11 +327,9 @@ class Game {
 			this.clearCanvas()
 			this.hideMenu()
 
-			this.board.generateBoard()
-			this.level.generateLevelElements(this.level.getLevel(this.difficulty))
-
-			this.app.stage.addChild(...this.board.elements)
-			this.app.stage.addChild(...this.level.elements)
+			this.level.getLevel(this.difficulty, elements => {
+				this.app.stage.addChild(...elements)
+			})
 		}
 	}
 
@@ -283,11 +358,11 @@ class Game {
 
 	update() {}
 
-	start() {
-		this.app.ticker.add(() => {
-			this.update()
-		})
-	}
+	// start() {
+	// 	this.app.ticker.add(() => {
+	// 		this.update()
+	// 	})
+	// }
 
 	fetchParams(path, callback) {
 		var req = new XMLHttpRequest()
