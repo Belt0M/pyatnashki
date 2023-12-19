@@ -258,7 +258,6 @@ class Game {
 
 		if (element && allowedElements.includes(element.type)) {
 			this.activeElement = element
-			console.log(this.activeElement.x, this.activeElement.y)
 			this.activeElement.alpha = 0.75
 		}
 	}
@@ -301,8 +300,8 @@ class Game {
 
 	followCursor() {
 		if (game.game.activeElement) {
-			const elemX = Math.ceil(game.game.activeElement.x)
-			const elemY = Math.ceil(game.game.activeElement.y)
+			const elemX = Number(game.game.activeElement.x.toFixed(3))
+			const elemY = Number(game.game.activeElement.y.toFixed(3))
 			const dirX = Math.sign(game.game.cursorX - elemX)
 			const dirY = Math.sign(game.game.cursorY - elemY)
 			const multiplier = 0.025
@@ -313,20 +312,31 @@ class Game {
 			const formattedY = Math.ceil(
 				game.game.cursorY - ((game.game.cursorY - 35) % TILE_SIZE)
 			)
-
+			console.log(
+				Math.abs(game.game.cursorY - (elemY + 35)) > 35,
+				game.game.cursorY,
+				elemY
+			)
 			if (
 				elemX !== formattedX &&
 				!game.game.checkCollision(elemX + multiplier * dirX, elemY) &&
 				(game.game.activeElement.y - 35) % TILE_SIZE === 0
 			) {
-				game.game.activeElement.x += multiplier * dirX
+				console.log('x')
+				let temp = elemX + multiplier * dirX
+				game.game.activeElement.x = Number(Number(temp).toFixed(3))
 			} else if (
-				elemX === formattedX &&
 				elemY !== formattedY &&
 				!game.game.checkCollision(elemX, elemY + multiplier * dirY) &&
-				(game.game.activeElement.x - 55) % TILE_SIZE === 0
+				(elemX - 55) % TILE_SIZE === 0 &&
+				Math.abs(game.game.cursorY - (elemY + 35)) > 35
 			) {
-				game.game.activeElement.y += multiplier * dirY
+				console.log('y')
+				let temp =
+					Math.abs(formattedY - (elemY + multiplier * dirY)) < 10
+						? formattedY
+						: elemY + multiplier * dirY
+				game.game.activeElement.y = Number(Number(temp).toFixed(3))
 			}
 		}
 	}
@@ -349,11 +359,7 @@ class Game {
 
 		if (
 			this.activeElement &&
-			!this.completedElements[this.activeElement.type] &&
-			cursorX > this.activeElement.x &&
-			cursorX < this.activeElement.x + TILE_SIZE &&
-			cursorY > this.activeElement.y &&
-			cursorY < this.activeElement.y + TILE_SIZE
+			!this.completedElements[this.activeElement.type]
 		) {
 			const element = this.activeElement
 
@@ -364,10 +370,11 @@ class Game {
 			this.cursorY = cursorY
 
 			const isCursorOutside =
-				cursorX < x - 100 ||
-				cursorX > x + TILE_SIZE + 100 ||
-				cursorY < y - 100 ||
-				cursorY > y + TILE_SIZE + 100
+				cursorX < this.activeElement.x ||
+				cursorX > this.activeElement.x + TILE_SIZE ||
+				cursorY < this.activeElement.y ||
+				cursorY > this.activeElement.y + TILE_SIZE
+
 			if (isCursorOutside) {
 				this.startFollowing()
 			} else {
@@ -380,7 +387,13 @@ class Game {
 			const signX = Math.sign(dx)
 			const signY = Math.sign(dy)
 
-			if (Math.abs(dx) > 20) {
+			if (
+				(isCursorOutside &&
+					!this.checkCollision(x + multiplier * signX, y) &&
+					Math.abs(dx) > 50 &&
+					(y - 35) % TILE_SIZE === 0) ||
+				(Math.abs(dx) > 20 && !isCursorOutside)
+			) {
 				// Horizontal movement
 				if (
 					Math.abs(y - 35) % TILE_SIZE === 0 &&
@@ -397,14 +410,20 @@ class Game {
 
 					if (direction === -1 && diffT < TILE_SIZE / 2) {
 						element.y -= diffT
-					} else if (direction === 1 && diffT > TILE_SIZE / 2) {
+					} else if (direction === 1 && diffT >= TILE_SIZE / 2) {
 						element.y += diffB
 					}
 				}
-			} else if (Math.abs(dy) > 20) {
+			} else if (
+				(isCursorOutside &&
+					!this.checkCollision(x, y + multiplier * signY) &&
+					Math.abs(dy) > 50 &&
+					(x - 55) % TILE_SIZE === 0) ||
+				(Math.abs(dy) > 20 && !isCursorOutside)
+			) {
 				// Vertical movement
 				if (
-					Math.abs(x - 195) % TILE_SIZE === 0 &&
+					Math.abs(x - 55) % TILE_SIZE === 0 &&
 					!this.checkCollision(x, y + multiplier * signY)
 				) {
 					element.y += multiplier * signY
@@ -418,7 +437,7 @@ class Game {
 
 					if (direction === -1 && diffL < TILE_SIZE / 2) {
 						element.x -= diffL
-					} else if (direction === 1 && diffL > TILE_SIZE / 2) {
+					} else if (direction === 1 && diffL >= TILE_SIZE / 2) {
 						element.x += diffR
 					}
 				}
