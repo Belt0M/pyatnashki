@@ -283,7 +283,7 @@ class Game {
 			const elemY = Number(game.game.activeElement.y.toFixed(3))
 			const dirX = Math.sign(game.game.cursorX - elemX)
 			const dirY = Math.sign(game.game.cursorY - elemY)
-			const multiplier = 0.05
+			const multiplier = 0.1
 
 			const formattedX = Math.ceil(
 				game.game.cursorX - ((game.game.cursorX - 55) % TILE_SIZE)
@@ -355,19 +355,18 @@ class Game {
 
 			const dx = event.clientX - this.gameField.offsetLeft - TILE_SIZE / 2 - x
 			const dy = event.clientY - this.gameField.offsetTop - TILE_SIZE / 2 - y
-
+			console.log(dx, dy)
 			if (Math.abs(dx) > 5 && !isCursorOutside && Math.abs(dx) > Math.abs(dy)) {
 				// Horizontal movement
 				const sign = Math.sign(dx)
 				const perpend = Math.abs(y - 35) % TILE_SIZE
 				if (perpend === 0 && !this.checkCollision(x + dx - 2.5 * sign, y)) {
 					element.x += Math.floor(dx)
-				} else if (Math.abs(dx) > 20) {
+				} else if (Math.abs(dx) > 30) {
 					// Edges cutting functionality
-					console.log(perpend, dy)
-					if (perpend <= TILE_SIZE / 2) {
+					if (perpend <= 25) {
 						element.y -= perpend
-					} else if (perpend > TILE_SIZE / 2) {
+					} else if (perpend > 45) {
 						element.y += TILE_SIZE - perpend
 					}
 				}
@@ -381,12 +380,12 @@ class Game {
 				const perpend = Math.abs(x - 55) % TILE_SIZE
 				if (perpend === 0 && !this.checkCollision(x, y + dy - sign * 2.5)) {
 					element.y += Math.floor(dy)
-				} else if (Math.abs(dy) > 20) {
+				} else if (Math.abs(dy) > 30) {
 					// Edges cutting functionality
-					console.log(perpend, dx)
-					if (perpend <= TILE_SIZE / 2) {
+					console.log(perpend, dx, dy)
+					if (perpend <= 25) {
 						element.x -= perpend
-					} else if (perpend > TILE_SIZE / 2) {
+					} else if (perpend > 45) {
 						element.x += TILE_SIZE - perpend
 					}
 				}
