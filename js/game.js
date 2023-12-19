@@ -42,7 +42,6 @@ class GUICore {
 
 	menuController(event) {
 		const choice = event.target.innerHTML.slice(0, 4).toLowerCase()
-		console.log(this)
 		switch (choice) {
 			case 'next':
 				this.nextLevel()
@@ -81,7 +80,6 @@ class GUICore {
 	}
 
 	prevLevel() {
-		console.log(this, this.session)
 		if (this.session.game.difficulty - 1 >= 0) {
 			this.session.game.difficulty -= 1
 
@@ -351,8 +349,6 @@ class Game {
 		const cursorX = event.clientX - this.gameField.offsetLeft
 		const cursorY = event.clientY - this.gameField.offsetTop
 
-		const multiplier = 14
-
 		if (
 			this.activeElement &&
 			!this.completedElements[this.activeElement.type]
@@ -380,15 +376,7 @@ class Game {
 			const dx = event.clientX - this.gameField.offsetLeft - TILE_SIZE / 2 - x
 			const dy = event.clientY - this.gameField.offsetTop - TILE_SIZE / 2 - y
 
-			if (
-				// (isCursorOutside &&
-				// 	!this.checkCollision(x + dx, y) &&
-				// 	Math.abs(dx) > 50 &&
-				// 	(y - 35) % TILE_SIZE === 0) ||
-				Math.abs(dx) > 5 &&
-				!isCursorOutside &&
-				Math.abs(dx) > Math.abs(dy)
-			) {
+			if (Math.abs(dx) > 5 && !isCursorOutside && Math.abs(dx) > Math.abs(dy)) {
 				// Horizontal movement
 				const sign = Math.sign(dx)
 				const perpend = Math.abs(y - 35) % TILE_SIZE
@@ -396,29 +384,14 @@ class Game {
 					element.x += Math.floor(dx)
 				} else if (Math.abs(dx) > 20) {
 					// Edges cutting functionality
-					console.log(perpend)
-					if (perpend < TILE_SIZE / 2) {
+					console.log(perpend, dy)
+					if (perpend <= TILE_SIZE / 2 && dy < 5) {
 						element.y -= perpend
-					} else {
+					} else if (perpend > TILE_SIZE / 2 && dy > 5) {
 						element.y += TILE_SIZE - perpend
 					}
-					// const direction =
-					// 	event.clientY - this.gameField.offsetTop <= y + 35 ? -1 : 1
-
-					// const diffT = (y - 35) % TILE_SIZE
-					// const diffB = TILE_SIZE - diffT
-
-					// if (diffT < TILE_SIZE / 2) {
-					// 	element.y -= diffT
-					// } else if (diffT >= TILE_SIZE / 2) {
-					// 	element.y += diffB
-					// }
 				}
 			} else if (
-				// (isCursorOutside &&
-				// 	!this.checkCollision(x, y + dy) &&
-				// 	Math.abs(dy) > 50 &&
-				// 	(x - 55) % TILE_SIZE === 0) ||
 				Math.abs(dy) > 5 &&
 				!isCursorOutside &&
 				Math.abs(dy) > Math.abs(dx)
@@ -430,24 +403,12 @@ class Game {
 					element.y += Math.floor(dy)
 				} else if (Math.abs(dy) > 20) {
 					// Edges cutting functionality
-					console.log(perpend)
-					if (perpend < TILE_SIZE / 2) {
+					console.log(perpend, dx)
+					if (perpend <= TILE_SIZE / 2 && dx < -5) {
 						element.x -= perpend
-					} else {
+					} else if (perpend > TILE_SIZE / 2 && dx > 5) {
 						element.x += TILE_SIZE - perpend
 					}
-
-					// const direction =
-					// 	event.clientX - this.gameField.offsetLeft <= x + 35 ? -1 : 1
-
-					// const diffL = (x - 55) % TILE_SIZE
-					// const diffR = TILE_SIZE - diffL
-
-					// if (diffL < TILE_SIZE / 2) {
-					// 	element.x -= diffL
-					// } else if (diffL >= TILE_SIZE / 2) {
-					// 	element.x += diffR
-					// }
 				}
 			}
 		}
@@ -499,7 +460,6 @@ class Game {
 		)
 		if (allElementsCompleted) {
 			this.stopTimer()
-			console.log(game, game.gui, game.gui)
 			game.gui.showMenu()
 		}
 	}
