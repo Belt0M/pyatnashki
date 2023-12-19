@@ -1,143 +1,3 @@
-class GameSession {
-	constructor() {
-		this.game = new Game()
-		this.gui = new GUICore(this)
-
-		// Start game listener
-		document
-			.querySelector('.greeting-banner span')
-			.addEventListener('click', () => this.game.startGame())
-
-		// Mouse listeners
-		this.game.app.view.addEventListener(
-			'mousedown',
-			this.game.handleMouseDown.bind(this.game)
-		)
-		this.game.app.view.addEventListener(
-			'mouseup',
-			this.game.handleMouseUp.bind(this.game)
-		)
-		this.game.app.view.addEventListener(
-			'mousemove',
-			this.game.handleMouseMove.bind(this.game)
-		)
-
-		// Menu listener
-		document
-			.querySelector('#menu-elements')
-			.addEventListener('click', this.gui.menuController.bind(this.gui))
-
-		// Game over listener
-		document
-			.querySelector('.game-over')
-			.addEventListener('click', () => this.gui.hideGameOver())
-	}
-}
-
-class GUICore {
-	constructor(session) {
-		this.session = session
-		this.menu = document.querySelector('.menu-wrapper')
-	}
-
-	menuController(event) {
-		const choice = event.target.innerHTML.slice(0, 4).toLowerCase()
-		switch (choice) {
-			case 'next':
-				this.nextLevel()
-				break
-			case 'prev':
-				this.prevLevel()
-				break
-			case 'exit':
-				this.exit()
-				break
-		}
-	}
-
-	nextLevel() {
-		if (
-			this.session.game.difficulty + 1 <
-			this.session.game.params.levels.length
-		) {
-			this.session.game.difficulty += 1
-
-			this.session.game.clearCanvas()
-			this.hideMenu()
-
-			// Update timer
-			this.session.game.remainingTime =
-				this.session.game.params.timers[this.session.game.difficulty]
-			this.session.game.startTimer()
-
-			this.session.game.level.getLevel(
-				this.session.game.difficulty,
-				elements => {
-					this.session.game.app.stage.addChild(...elements)
-				}
-			)
-		}
-	}
-
-	prevLevel() {
-		if (this.session.game.difficulty - 1 >= 0) {
-			this.session.game.difficulty -= 1
-
-			this.session.game.clearCanvas()
-			this.hideMenu()
-
-			// Update timer
-			this.session.game.remainingTime =
-				this.session.game.params.timers[this.session.game.difficulty]
-			this.session.game.startTimer()
-
-			this.session.game.level.getLevel(
-				this.session.game.difficulty,
-				elements => {
-					this.session.game.app.stage.addChild(...elements)
-				}
-			)
-		}
-	}
-
-	exit() {
-		this.session.game.clearCanvas()
-		this.session.game.difficulty = 0
-		this.hideMenu()
-		document.querySelector('.greeting-banner').style.display = 'flex'
-	}
-
-	showMenu() {
-		if (
-			this.session.game.difficulty + 1 ===
-			this.session.game.params.levels.length
-		) {
-			this.showGameOver()
-			document.querySelector('#next').disabled = true
-			document.querySelector('#prev').disabled = false
-		} else if (this.session.game.difficulty === 0) {
-			document.querySelector('#next').disabled = false
-			document.querySelector('#prev').disabled = true
-		} else {
-			document.querySelector('#next').disabled = false
-			document.querySelector('#prev').disabled = false
-		}
-		this.menu.style.display = 'flex'
-	}
-
-	hideMenu() {
-		this.menu.style.display = 'none'
-	}
-
-	showGameOver() {
-		document.querySelector('.game-over').style.display = 'flex'
-	}
-
-	hideGameOver() {
-		document.querySelector('.game-over').style.display = 'none'
-	}
-}
-
 class Game {
 	constructor() {
 		// Init the Pixi canvas
@@ -353,20 +213,19 @@ class Game {
 				this.stopFollowing()
 			}
 
-			const dx = event.clientX - this.gameField.offsetLeft - TILE_SIZE / 2 - x
-			const dy = event.clientY - this.gameField.offsetTop - TILE_SIZE / 2 - y
-			console.log(dx, dy)
+			const dx = cursorX - TILE_SIZE / 2 - x
+			const dy = cursorY - TILE_SIZE / 2 - y
 			if (Math.abs(dx) > 5 && !isCursorOutside && Math.abs(dx) > Math.abs(dy)) {
 				// Horizontal movement
 				const sign = Math.sign(dx)
 				const perpend = Math.abs(y - 35) % TILE_SIZE
 				if (perpend === 0 && !this.checkCollision(x + dx - 2.5 * sign, y)) {
 					element.x += Math.floor(dx)
-				} else if (Math.abs(dx) > 30) {
+				} else if (perpend !== 0 && Math.abs(dx) >= 30) {
 					// Edges cutting functionality
-					if (perpend <= 25) {
+					if (perpend <= TILE_SIZE / 2) {
 						element.y -= perpend
-					} else if (perpend > 45) {
+					} else if (perpend > TILE_SIZE / 2) {
 						element.y += TILE_SIZE - perpend
 					}
 				}
@@ -380,12 +239,11 @@ class Game {
 				const perpend = Math.abs(x - 55) % TILE_SIZE
 				if (perpend === 0 && !this.checkCollision(x, y + dy - sign * 2.5)) {
 					element.y += Math.floor(dy)
-				} else if (Math.abs(dy) > 30) {
+				} else if (perpend !== 0 && Math.abs(dy) >= 30) {
 					// Edges cutting functionality
-					console.log(perpend, dx, dy)
-					if (perpend <= 25) {
+					if (perpend <= TILE_SIZE / 2) {
 						element.x -= perpend
-					} else if (perpend > 45) {
+					} else if (perpend > TILE_SIZE / 2) {
 						element.x += TILE_SIZE - perpend
 					}
 				}
