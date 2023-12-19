@@ -164,6 +164,27 @@ class Game {
 			this.activeElement = null
 		})
 
+		this.sprites = {}
+
+		// this.loader = new PIXI.Loader()
+		// console.log(this.loader)
+		// this.loader.baseUrl = BASE_URL
+		// Object.keys(this.params.elements).forEach(el => {
+		// 	console.log(el, this.params.elements[el])
+		// 	this.loader.add(el, this.params.elements[el])
+		// })
+
+		// this.loader.onProgress.add(e => {
+		// 	console.log(e.progress)
+		// })
+		// this.loader.onError.add(e => {
+		// 	console.error(e.message)
+		// })
+		// this.loader.onComplete.add(() => {
+		// 	console.log('Done')
+		// })
+		// this.loader.load()
+
 		this.timer = null
 		this.timerBody = document.querySelector('.game-timer')
 	}
@@ -279,7 +300,6 @@ class Game {
 	}
 
 	followCursor() {
-		console.log(game.game)
 		if (game.game.activeElement) {
 			const elemX = Math.ceil(game.game.activeElement.x)
 			const elemY = Math.ceil(game.game.activeElement.y)
@@ -294,11 +314,6 @@ class Game {
 				game.game.cursorY - ((game.game.cursorY - 35) % TILE_SIZE)
 			)
 
-			console.log(
-				game.game.activeElement.x,
-				elemX,
-				!game.game.checkCollision(elemX + multiplier * dirX, elemY)
-			)
 			if (
 				elemX !== formattedX &&
 				!game.game.checkCollision(elemX + multiplier * dirX, elemY) &&
@@ -326,105 +341,85 @@ class Game {
 
 	// Element movements handling on mouse move
 	handleMouseMove(event) {
+		// Cursor Coordinates
+		const cursorX = event.clientX - this.gameField.offsetLeft
+		const cursorY = event.clientY - this.gameField.offsetTop
+
+		const multiplier = 14
+
 		if (
 			this.activeElement &&
-			!this.completedElements[this.activeElement.type]
+			!this.completedElements[this.activeElement.type] &&
+			cursorX > this.activeElement.x &&
+			cursorX < this.activeElement.x + TILE_SIZE &&
+			cursorY > this.activeElement.y &&
+			cursorY < this.activeElement.y + TILE_SIZE
 		) {
-			const cursorX = event.clientX - this.gameField.offsetLeft
-			const cursorY = event.clientY - this.gameField.offsetTop
+			const element = this.activeElement
 
+			// Element coordinates
+			const x = element.x
+			const y = element.y
 			this.cursorX = cursorX
 			this.cursorY = cursorY
 
 			const isCursorOutside =
-				cursorX < this.activeElement.x - 100 ||
-				cursorX > this.activeElement.x + TILE_SIZE + 100 ||
-				cursorY < this.activeElement.y - 100 ||
-				cursorY > this.activeElement.y + TILE_SIZE + 100
+				cursorX < x - 100 ||
+				cursorX > x + TILE_SIZE + 100 ||
+				cursorY < y - 100 ||
+				cursorY > y + TILE_SIZE + 100
 			if (isCursorOutside) {
 				this.startFollowing()
 			} else {
 				this.stopFollowing()
 			}
 
-			const dx =
-				event.clientX - this.gameField.offsetLeft - 35 - this.activeElement.x
-			const dy =
-				event.clientY - this.gameField.offsetTop - 35 - this.activeElement.y
-			let signX = Math.sign(dx)
-			if (
-				Math.abs(dx) > 35 &&
-				!this.checkCollision(
-					this.activeElement.x + 10 * signX,
-					this.activeElement.y
-				)
-			) {
+			const dx = event.clientX - this.gameField.offsetLeft - TILE_SIZE / 2 - x
+			const dy = event.clientY - this.gameField.offsetTop - TILE_SIZE / 2 - y
+
+			const signX = Math.sign(dx)
+			const signY = Math.sign(dy)
+
+			if (Math.abs(dx) > 20) {
 				// Horizontal movement
-				let sign = Math.sign(dx)
 				if (
-					Math.abs(this.activeElement.y - 385) % TILE_SIZE === 0 &&
-					Math.abs(dx) > 35
+					Math.abs(y - 35) % TILE_SIZE === 0 &&
+					!this.checkCollision(x + multiplier * signX, y)
 				) {
-					if (
-						!this.checkCollision(
-							this.activeElement.x + 10 * sign,
-							this.activeElement.y
-						)
-					) {
-						this.activeElement.x += 10 * sign
-					}
-				} else if (Math.abs(dx) > 35) {
+					element.x += multiplier * signX
+				} else {
 					// Edges cutting functionality
 					const direction =
-						event.clientY - this.gameField.offsetTop <=
-						this.activeElement.y + 35
-							? -1
-							: event.clientY - this.gameField.offsetTop >
-							  this.activeElement.y - 35
-							? 1
-							: 0
-					const diffT = (this.activeElement.y - 35) % TILE_SIZE
+						event.clientY - this.gameField.offsetTop <= y + 35 ? -1 : 1
+
+					const diffT = (y - 35) % TILE_SIZE
 					const diffB = TILE_SIZE - diffT
 
-					if (direction === -1 && diffT > 0) {
-						this.activeElement.y -= diffT
-					} else if (direction === 1 && diffB > 0) {
-						this.activeElement.y += diffB
+					if (direction === -1 && diffT < TILE_SIZE / 2) {
+						element.y -= diffT
+					} else if (direction === 1 && diffT > TILE_SIZE / 2) {
+						element.y += diffB
 					}
 				}
-			} else if (Math.abs(dy) > 35) {
+			} else if (Math.abs(dy) > 20) {
 				// Vertical movement
-				const sign = Math.sign(dy)
 				if (
-					Math.abs(this.activeElement.x - 195) % TILE_SIZE === 0 &&
-					Math.abs(dy) > 35
+					Math.abs(x - 195) % TILE_SIZE === 0 &&
+					!this.checkCollision(x, y + multiplier * signY)
 				) {
-					if (
-						!this.checkCollision(
-							this.activeElement.x,
-							this.activeElement.y + 10 * sign
-						)
-					) {
-						this.activeElement.y += 10 * sign
-					}
-				} else if (Math.abs(dy) > 35) {
+					element.y += multiplier * signY
+				} else {
 					// Edges cutting functionality
 					const direction =
-						event.clientX - this.gameField.offsetLeft <=
-						this.activeElement.x + 35
-							? -1
-							: event.clientX - this.gameField.offsetLeft >
-							  this.activeElement.x - 35
-							? 1
-							: 0
+						event.clientX - this.gameField.offsetLeft <= x + 35 ? -1 : 1
 
-					const diffL = (this.activeElement.x - 55) % TILE_SIZE
+					const diffL = (x - 55) % TILE_SIZE
 					const diffR = TILE_SIZE - diffL
 
-					if (direction === -1 && diffL > 0) {
-						this.activeElement.x -= diffL
-					} else if (direction === 1 && diffR > 0) {
-						this.activeElement.x += diffR
+					if (direction === -1 && diffL < TILE_SIZE / 2) {
+						element.x -= diffL
+					} else if (direction === 1 && diffL > TILE_SIZE / 2) {
+						element.x += diffR
 					}
 				}
 			}
