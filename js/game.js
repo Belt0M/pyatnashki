@@ -365,9 +365,9 @@ class Game {
 				} else if (Math.abs(dx) > 20) {
 					// Edges cutting functionality
 					console.log(perpend, dy)
-					if (perpend <= TILE_SIZE / 2 && dy < 1) {
+					if (perpend <= TILE_SIZE / 2) {
 						element.y -= perpend
-					} else if (perpend > TILE_SIZE / 2 && dy > 1) {
+					} else if (perpend > TILE_SIZE / 2) {
 						element.y += TILE_SIZE - perpend
 					}
 				}
@@ -384,9 +384,9 @@ class Game {
 				} else if (Math.abs(dy) > 20) {
 					// Edges cutting functionality
 					console.log(perpend, dx)
-					if (perpend <= TILE_SIZE / 2 && dx < -1) {
+					if (perpend <= TILE_SIZE / 2) {
 						element.x -= perpend
-					} else if (perpend > TILE_SIZE / 2 && dx > 1) {
+					} else if (perpend > TILE_SIZE / 2) {
 						element.x += TILE_SIZE - perpend
 					}
 				}
