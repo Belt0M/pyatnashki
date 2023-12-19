@@ -466,8 +466,7 @@ class Game {
 				x < element.x + TILE_SIZE &&
 				y + TILE_SIZE > element.y &&
 				y < element.y + TILE_SIZE &&
-				elementsArray.includes(element.type) &&
-				element.alpha !== 0.7
+				elementsArray.includes(element.type)
 			) {
 				return true
 			} else if (
