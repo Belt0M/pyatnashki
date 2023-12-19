@@ -215,7 +215,7 @@ class Game {
 
 			const dx = cursorX - TILE_SIZE / 2 - x
 			const dy = cursorY - TILE_SIZE / 2 - y
-			if (Math.abs(dx) > 5 && !isCursorOutside && Math.abs(dx) > Math.abs(dy)) {
+			if (!isCursorOutside && Math.abs(dx) > Math.abs(dy)) {
 				// Horizontal movement
 				const sign = Math.sign(dx)
 				const perpend = Math.abs(y - 35) % TILE_SIZE
@@ -229,11 +229,7 @@ class Game {
 						element.y += TILE_SIZE - perpend
 					}
 				}
-			} else if (
-				Math.abs(dy) > 5 &&
-				!isCursorOutside &&
-				Math.abs(dy) > Math.abs(dx)
-			) {
+			} else if (!isCursorOutside && Math.abs(dy) > Math.abs(dx)) {
 				// Vertical movement
 				const sign = Math.sign(dy)
 				const perpend = Math.abs(x - 55) % TILE_SIZE
