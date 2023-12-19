@@ -164,26 +164,6 @@ class Game {
 
 		this.sprites = {}
 
-		// console.log(PIXI.Assets)
-		// this.loader = new PIXI.Loader()
-		// console.log(this.loader)
-		// this.loader.baseUrl = BASE_URL
-		// Object.keys(this.params.elements).forEach(el => {
-		// 	console.log(el, this.params.elements[el])
-		// 	this.loader.add(el, this.params.elements[el])
-		// })
-
-		// this.loader.onProgress.add(e => {
-		// 	console.log(e.progress)
-		// })
-		// this.loader.onError.add(e => {
-		// 	console.error(e.message)
-		// })
-		// this.loader.onComplete.add(() => {
-		// 	console.log('Done')
-		// })
-		// this.loader.load()
-
 		this.timer = null
 		this.timerBody = document.querySelector('.game-timer')
 	}
@@ -385,9 +365,9 @@ class Game {
 				} else if (Math.abs(dx) > 20) {
 					// Edges cutting functionality
 					console.log(perpend, dy)
-					if (perpend <= TILE_SIZE / 2 && dy < 5) {
+					if (perpend <= TILE_SIZE / 2 && dy < 1) {
 						element.y -= perpend
-					} else if (perpend > TILE_SIZE / 2 && dy > 5) {
+					} else if (perpend > TILE_SIZE / 2 && dy > 1) {
 						element.y += TILE_SIZE - perpend
 					}
 				}
@@ -404,9 +384,9 @@ class Game {
 				} else if (Math.abs(dy) > 20) {
 					// Edges cutting functionality
 					console.log(perpend, dx)
-					if (perpend <= TILE_SIZE / 2 && dx < -5) {
+					if (perpend <= TILE_SIZE / 2 && dx < -1) {
 						element.x -= perpend
-					} else if (perpend > TILE_SIZE / 2 && dx > 5) {
+					} else if (perpend > TILE_SIZE / 2 && dx > 1) {
 						element.x += TILE_SIZE - perpend
 					}
 				}
@@ -482,6 +462,10 @@ class Game {
 		req.onload = () => {
 			if (req.status === 200) {
 				this.params = JSON.parse(req.responseText)
+				Object.keys(this.params.elements).forEach(key => {
+					this.sprites[key] = PIXI.Assets.load(this.params.elements[key].url)
+				})
+				console.log(this.sprites)
 				this.isLoading = false
 				callback && callback()
 			} else {
