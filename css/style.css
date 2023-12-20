@@ -89,6 +89,7 @@ body {
 	font-size: 3rem;
 	font-style: 600;
 	color: #fff;
+	user-select: none;
 }
 
 .greeting-banner {

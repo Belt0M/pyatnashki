@@ -2,18 +2,25 @@ const BASE_URL = `${/(.*)\//.exec(window.document.location.href)[0]}`
 
 class LevelManager {
 	constructor() {
-		this.elements = []
+		this.elements = [[]]
 	}
 
 	// Get the exact level matrix
 	getLevel(difficulty, callback) {
 		const url = this.urls[difficulty]
 		this.fetchLevel(`${BASE_URL}/matrices/${url}`, () => {
+			this.initializeElementsArray(this.matrix.length, this.matrix[0].length)
 			this.generateLevelElements(this.matrix)
 
 			// Call the callback with the generated elements
 			callback && callback(this.elements)
 		})
+	}
+
+	initializeElementsArray(rows, cols) {
+		this.elements = new Array(rows)
+			.fill([])
+			.map(() => new Array(cols).fill(null))
 	}
 
 	// Generate all level elements
@@ -29,16 +36,18 @@ class LevelManager {
 				}
 				if (cellEl) {
 					cellEl.type = this.enums.cell.id
-					cellEl.zOrder = -5
-					this.elements.push(cellEl)
-					cellEl.position.set(125 + el * TILE_SIZE, 35 + row * TILE_SIZE)
+					cellEl.id =
+						value + 'x' + 127 + el * TILE_SIZE + 'y' + 34 + row * TILE_SIZE
+					this.elements[row][el] = cellEl
+					cellEl.position.set(127 + el * TILE_SIZE, 34 + row * TILE_SIZE)
+					cellEl.row = row
+					cellEl.col = el
 				}
 
 				let newEl = PIXI.Sprite.from(`${BASE_URL + url}`)
 				newEl.type = value
-				if (value === this.enums.border.id) {
+				if (value === this.enums.border.id || value === 1) {
 					newEl.alpha = 0
-					newEl.zIndex = 0
 				}
 
 				if (
@@ -47,13 +56,14 @@ class LevelManager {
 				) {
 					newEl.alpha = 0.7
 				}
-				this.elements.push(newEl)
-				newEl.position.set(125 + el * TILE_SIZE, 35 + row * TILE_SIZE)
+				newEl.id =
+					value + 'x' + 127 + el * TILE_SIZE + 'y' + 34 + row * TILE_SIZE
+				this.elements[row][el] = newEl
+				newEl.row = row
+				newEl.col = el
+				newEl.position.set(127 + el * TILE_SIZE, 34 + row * TILE_SIZE)
 			}
 		}
-		this.elements.sort((a, b) => {
-			return a.type - b.type
-		})
 	}
 	// Find the level element by its ID
 	findUrlById(id) {

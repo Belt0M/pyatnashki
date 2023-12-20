@@ -7,6 +7,10 @@ class Game {
 			backgroundAlpha: 0,
 		})
 
+		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png')
+
+		this.app.stage.addChild(img)
+
 		this.gameField = document.querySelector('.game-field')
 
 		this.gameField.appendChild(this.app.view)
@@ -23,6 +27,23 @@ class Game {
 		})
 
 		this.sprites = {}
+
+		this.leftStart = 127
+		this.topStart = 34
+
+		this.distance = {
+			left: 0,
+			right: 0,
+			top: 0,
+			bottom: 0,
+		}
+
+		this.neighbors = {
+			left: null,
+			right: null,
+			top: null,
+			bottom: null,
+		}
 
 		this.timer = null
 		this.timerBody = document.querySelector('.game-timer')
@@ -60,7 +81,7 @@ class Game {
 		// Generate and add the level elements to the scene
 		this.difficulty = 0
 		this.level.getLevel(this.difficulty, elements => {
-			this.app.stage.addChild(...elements)
+			this.app.stage.addChild(...elements.flat())
 		})
 
 		this.remainingTime = this.params.timers[this.difficulty]
@@ -69,24 +90,25 @@ class Game {
 
 	// Find dragged element
 	findSelectedElement(event) {
-		return this.level.elements.find(
-			element =>
-				element.x <= event.clientX - this.gameField.offsetLeft &&
-				element.getBounds().x + TILE_SIZE >=
-					event.clientX - this.gameField.offsetLeft &&
-				element.y <= event.clientY - this.gameField.offsetTop &&
-				element.getBounds().y + TILE_SIZE >=
-					event.clientY - this.gameField.offsetTop &&
-				element.zOrder !== -5 &&
-				element.alpha === 1 &&
-				element.type !== 1
-		)
+		const cursorX = event.clientX - this.gameField.offsetLeft
+		const cursorY = event.clientY - this.gameField.offsetTop
+		// console.log(
+		// 	Math.floor((cursorY - this.topStart) / 70),
+		// 	Math.floor((cursorX - this.leftStart) / 70)
+		// )
+		const element =
+			this.level.elements[Math.floor((cursorY - this.topStart) / 70)][
+				Math.floor((cursorX - this.leftStart) / 70)
+			]
+		// console.log(element)
+		return element.alpha !== 0.7 && element
 	}
 
 	// Om mouse down select element for future movements
 	handleMouseDown(event) {
 		const element = this.findSelectedElement(event)
 		const enums = this.params.elements
+
 		const allowedElements = [
 			enums.wood.id,
 			enums.air.id,
@@ -97,41 +119,64 @@ class Game {
 
 		if (element && allowedElements.includes(element.type)) {
 			this.activeElement = element
+			this.initCol = element.col
+			this.initRow = element.row
 			this.activeElement.alpha = 0.75
+			this.findNeighbors()
 		}
+	}
+
+	swapElements() {
+		const row = Math.round((this.activeElement.y - this.topStart) / 70)
+		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
+
+		this.activeElement.col = col
+		this.activeElement.row = row
+
+		const elementToSwap = this.level.elements[row][col]
+		elementToSwap.col = this.initCol
+		elementToSwap.row = this.initRow
+
+		this.level.elements[this.initRow][this.initCol] = elementToSwap
+		this.level.elements[row][col] = this.activeElement
+
+		this.initCol = col
+		this.initRow = row
 	}
 
 	// On mouse up reset the active element
 	handleMouseUp() {
 		this.stopFollowing()
 		if (this.activeElement) {
-			let diffX = Math.abs(this.activeElement.x - 55) % TILE_SIZE
-			let diffY = Math.abs(this.activeElement.y - 35) % TILE_SIZE
+			console.log('HandleUp:', this.level.elements)
+			console.log(
+				'elemX: ',
+				this.activeElement.x,
+				'elemY: ',
+				this.activeElement.y
+			)
+
+			let diffX = Math.abs(this.activeElement.x - this.leftStart) % TILE_SIZE
+			let diffY = Math.abs(this.activeElement.y - this.topStart) % TILE_SIZE
 			// Transfer the element to the nearest cell
 			if (diffX !== 0) {
 				const sign = diffX >= TILE_SIZE / 2 ? 1 : -1
 				diffX = sign > 0 ? TILE_SIZE - diffX : diffX
-				if (
-					!this.checkCollision(
-						this.activeElement.x + diffX * sign,
-						this.activeElement.y
-					)
-				) {
-					this.activeElement.x += diffX * sign
-				}
+
+				this.activeElement.x += diffX * sign
+				this.swapElements()
 			} else if (diffY !== 0) {
 				const sign = diffY >= TILE_SIZE / 2 ? 1 : -1
 				diffY = sign > 0 ? TILE_SIZE - diffY : diffY
 
-				if (
-					!this.checkCollision(
-						this.activeElement.x,
-						this.activeElement.y + diffY * sign
-					)
-				) {
-					this.activeElement.y += diffY * sign
-				}
+				this.activeElement.y += diffY * sign
+				this.swapElements()
 			}
+
+			// this.completedElements[element.type] = true
+			// // Check whether all elements are completed
+			// this.checkIsLevelCompleted()
+
 			this.activeElement.alpha = 1
 			this.activeElement = null
 		}
@@ -146,26 +191,24 @@ class Game {
 			const multiplier = 0.1
 
 			const formattedX = Math.ceil(
-				game.game.cursorX - ((game.game.cursorX - 55) % TILE_SIZE)
+				game.game.cursorX - ((game.game.cursorX - this.leftStart) % TILE_SIZE)
 			)
 			const formattedY = Math.ceil(
-				game.game.cursorY - ((game.game.cursorY - 35) % TILE_SIZE)
+				game.game.cursorY - ((game.game.cursorY - this.topStart) % TILE_SIZE)
 			)
 			if (
 				elemX !== formattedX &&
 				!game.game.checkCollision(elemX + multiplier * dirX, elemY) &&
 				(game.game.activeElement.y - 35) % TILE_SIZE === 0
 			) {
-				console.log('x')
 				let temp = elemX + multiplier * dirX
 				game.game.activeElement.x = Number(Number(temp).toFixed(3))
 			} else if (
 				elemY !== formattedY &&
 				!game.game.checkCollision(elemX, elemY + multiplier * dirY) &&
-				(elemX - 55) % TILE_SIZE === 0 &&
+				(elemX - this.leftStart) % TILE_SIZE === 0 &&
 				Math.abs(game.game.cursorY - (elemY + 35)) > 35
 			) {
-				console.log('y')
 				let temp =
 					Math.abs(formattedY - (elemY + multiplier * dirY)) < 10
 						? formattedY
@@ -183,6 +226,67 @@ class Game {
 		this.app.ticker.remove(this.followCursor)
 	}
 
+	findNeighbors() {
+		this.swapElements()
+
+		const row = Math.round((this.activeElement.y - this.topStart) / 70)
+		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
+		const elements = this.level.elements
+
+		const elementsArray = [0, 2, 3, 4, 5, 6, 7]
+		elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
+
+		this.level.elements[
+			Math.round((this.activeElement.y - this.topStart) / 70)
+		][Math.round((this.activeElement.x - this.leftStart) / 70)]
+
+		this.neighbors.left =
+			elements[row][col - 1] &&
+			[0, 2, 3, 4, 5, 6, 7].includes(elements[row][col - 1].type)
+				? elements[row][col - 1]
+				: null
+		console.log(
+			'row: ',
+			row,
+			'col: ',
+			col,
+			'left:',
+			elements[row][col - 1].type,
+			'top:',
+			elements[row - 1][col].type,
+			'right:',
+			elements[row][col + 1].type,
+			'bottom:',
+			elements[row + 1][col].type,
+			'elemX: ',
+			this.activeElement.x,
+			'elemY: ',
+			this.activeElement.y
+		)
+		this.neighbors.right =
+			elements[row][col + 1] &&
+			[0, 2, 3, 4, 5, 6, 7].includes(elements[row][col + 1].type)
+				? elements[row][col + 1]
+				: null
+		this.neighbors.top =
+			elements[row - 1][col] &&
+			[0, 2, 3, 4, 5, 6, 7].includes(elements[row - 1][col].type)
+				? elements[row - 1][col]
+				: null
+		this.neighbors.bottom =
+			elements[row + 1][col] &&
+			[0, 2, 3, 4, 5, 6, 7].includes(elements[row + 1][col].type)
+				? elements[row + 1][col]
+				: null
+		this.distance = {
+			left: 0,
+			right: 0,
+			top: 0,
+			bottom: 0,
+		}
+		console.log('Neighbors: ', this.neighbors)
+	}
+
 	// Element movements handling on mouse move
 	handleMouseMove(event) {
 		// Cursor Coordinates
@@ -198,6 +302,7 @@ class Game {
 			// Element coordinates
 			const x = element.x
 			const y = element.y
+
 			this.cursorX = cursorX
 			this.cursorY = cursorY
 
@@ -207,40 +312,121 @@ class Game {
 				cursorY < this.activeElement.y - 10 ||
 				cursorY > this.activeElement.y + TILE_SIZE + 10
 
-			if (isCursorOutside) {
-				this.startFollowing()
-			} else {
-				this.stopFollowing()
-			}
+			// if (isCursorOutside) {
+			// 	this.startFollowing()
+			// } else {
+			// 	this.stopFollowing()
+			// }
 
 			const dx = cursorX - TILE_SIZE / 2 - x
 			const dy = cursorY - TILE_SIZE / 2 - y
-			if (!isCursorOutside && Math.abs(dx) > Math.abs(dy)) {
+
+			const row = Math.floor((this.activeElement.y - this.topStart) / 70)
+			const col = Math.floor((this.activeElement.x - this.leftStart) / 70)
+
+			const perpendX = Math.abs(x - this.leftStart) % TILE_SIZE
+			const perpendY = Math.abs(y - this.topStart) % TILE_SIZE
+
+			if (
+				!isCursorOutside &&
+				Math.abs(dx) > Math.abs(dy) + 5 &&
+				perpendY === 0
+			) {
 				// Horizontal movement
-				const sign = Math.sign(dx)
-				const perpend = Math.abs(y - 35) % TILE_SIZE
-				if (perpend === 0 && !this.checkCollision(x + dx - 2.5 * sign, y)) {
-					element.x += Math.floor(dx)
-				} else if (perpend !== 0 && Math.abs(dx) >= 30) {
-					// Edges cutting functionality
-					if (perpend <= TILE_SIZE / 2) {
-						element.y -= perpend
-					} else if (perpend > TILE_SIZE / 2) {
-						element.y += TILE_SIZE - perpend
+				// console.log(
+				// 	'DistLeft: ',
+				// 	this.distance.left,
+				// 	'DistRight: ',
+				// 	this.distance.right,
+				// 	dx,
+				// 	element.x,
+				// 	element.y
+				// )
+				if (
+					dx < 0 &&
+					(!this.neighbors.left ||
+						(this.neighbors.left && this.distance.right !== 0))
+				) {
+					this.distance.left += Math.abs(dx)
+					this.distance.right = TILE_SIZE - this.distance.left
+
+					element.x +=
+						this.distance.left > 70
+							? this.distance.left - Math.abs(dx) - TILE_SIZE
+							: dx
+					if (this.distance.left >= 70) {
+						this.distance.left = 0
+						this.distance.right = 0
+						this.findNeighbors()
+						this.activeElement.col = col
+					}
+				} else if (
+					dx > 0 &&
+					(!this.neighbors.right ||
+						(this.neighbors.right && this.distance.left !== 0))
+				) {
+					this.distance.right += Math.abs(dx)
+					this.distance.left = TILE_SIZE - this.distance.right
+
+					element.x +=
+						this.distance.right > 70
+							? TILE_SIZE - (this.distance.right - Math.abs(dx))
+							: dx
+					if (this.distance.right >= 70) {
+						this.distance.right = 0
+						this.distance.left = 0
+						this.findNeighbors()
+						this.activeElement.col = col
 					}
 				}
-			} else if (!isCursorOutside && Math.abs(dy) > Math.abs(dx)) {
+			} else if (
+				!isCursorOutside &&
+				Math.abs(dy) > Math.abs(dx) + 5 &&
+				perpendX === 0
+			) {
 				// Vertical movement
-				const sign = Math.sign(dy)
-				const perpend = Math.abs(x - 55) % TILE_SIZE
-				if (perpend === 0 && !this.checkCollision(x, y + dy - sign * 2.5)) {
-					element.y += Math.floor(dy)
-				} else if (perpend !== 0 && Math.abs(dy) >= 30) {
-					// Edges cutting functionality
-					if (perpend <= TILE_SIZE / 2) {
-						element.x -= perpend
-					} else if (perpend > TILE_SIZE / 2) {
-						element.x += TILE_SIZE - perpend
+				// console.log(
+				// 	this.neighbors.top && this.distance.bottom !== 0,
+				// 	this.neighbors.top,
+				// 	this.distance.top,
+				// 	this.distance.bottom
+				// )
+				if (
+					dy < 0 &&
+					(!this.neighbors.top ||
+						(this.neighbors.top && this.distance.bottom !== 0))
+				) {
+					this.distance.top += Math.abs(dy)
+					this.distance.bottom = TILE_SIZE - this.distance.top
+
+					element.y +=
+						this.distance.top > 70
+							? this.distance.top - Math.abs(dy) - TILE_SIZE
+							: dy
+					if (this.distance.top >= 70) {
+						this.distance.top = 0
+						this.distance.bottom = 0
+
+						this.findNeighbors()
+						this.activeElement.row = row
+					}
+				} else if (
+					dy > 0 &&
+					(!this.neighbors.bottom ||
+						(this.neighbors.bottom && this.distance.top !== 0))
+				) {
+					this.distance.bottom += Math.abs(dy)
+					this.distance.top = TILE_SIZE - this.distance.bottom
+
+					element.y +=
+						this.distance.bottom > 70
+							? TILE_SIZE - (this.distance.bottom - Math.abs(dy))
+							: dy
+					if (this.distance.bottom >= 70) {
+						this.distance.bottom = 0
+						this.distance.top = 0
+						this.findNeighbors()
+						this.activeElement.row = row
 					}
 				}
 			}
