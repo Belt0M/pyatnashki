@@ -7,6 +7,8 @@ class Game {
 			backgroundAlpha: 0,
 		})
 
+		console.log(this.app.ticker)
+
 		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png')
 
 		this.app.stage.addChild(img)
@@ -83,7 +85,7 @@ class Game {
 		this.app.stage.addChild(img)
 
 		// Generate and add the level elements to the scene
-		this.difficulty = 2
+		this.difficulty = 0
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements.flat())
 		})
@@ -120,9 +122,7 @@ class Game {
 
 		if (element && allowedElements.includes(element.type)) {
 			this.activeElement = element
-
 			if (!element.initCol && !element.initRow) {
-				console.log('f')
 				element.initCol = element.col
 				element.initRow = element.row
 			}
@@ -151,24 +151,10 @@ class Game {
 		elementToSwap.col = this.activeElement.initCol
 		elementToSwap.row = this.activeElement.initRow
 
-		console.log(
-			row,
-			col,
-			this.activeElement.initRow,
-			this.activeElement.initCol,
-			'type: ',
-			this.activeElement.type
-		)
 		this.level.elements[this.activeElement.initRow][
 			this.activeElement.initCol
 		] = elementToSwap
 		this.level.elements[row][col] = this.activeElement
-		console.log(
-			this.level.elements[this.activeElement.initRow][
-				this.activeElement.initCol
-			].type,
-			this.level.elements[row][col].type
-		)
 
 		this.activeElement.initCol = col
 		this.activeElement.initRow = row
@@ -201,47 +187,105 @@ class Game {
 	}
 
 	followCursor() {
-		if (game.game.activeElement) {
-			const elemX = Number(game.game.activeElement.x.toFixed(3))
-			const elemY = Number(game.game.activeElement.y.toFixed(3))
-			const dirX = Math.sign(game.game.cursorX - elemX)
-			const dirY = Math.sign(game.game.cursorY - elemY)
-			const multiplier = 0.1
+		if (this.activeElement) {
+			const elemX = this.activeElement.x
+			const elemY = this.activeElement.y
 
-			const formattedX = Math.ceil(
-				game.game.cursorX - ((game.game.cursorX - this.leftStart) % TILE_SIZE)
-			)
-			const formattedY = Math.ceil(
-				game.game.cursorY - ((game.game.cursorY - this.topStart) % TILE_SIZE)
-			)
+			const diffX = this.cursorX - elemX - TILE_SIZE / 2
+			const diffY = this.cursorY - elemY - TILE_SIZE / 2
+			const dirX = Math.sign(diffX)
+			const dirY = Math.sign(diffY)
+
+			const row = Math.floor((this.activeElement.y - this.topStart) / 70)
+			const col = Math.floor((this.activeElement.x - this.leftStart) / 70)
+
+			const perpendX = Math.abs(elemX - this.leftStart) % TILE_SIZE
+			const perpendY = Math.abs(elemY - this.topStart) % TILE_SIZE
+
+			const multiplier = 1
+
 			if (
-				elemX !== formattedX &&
-				!game.game.checkCollision(elemX + multiplier * dirX, elemY) &&
-				(game.game.activeElement.y - 35) % TILE_SIZE === 0
+				diffX / 2 !== 0 &&
+				perpendY === 0 &&
+				!this.neighbors[dirX === -1 ? 'left' : 'right']
 			) {
-				let temp = elemX + multiplier * dirX
-				game.game.activeElement.x = Number(Number(temp).toFixed(3))
-			} else if (
-				elemY !== formattedY &&
-				!game.game.checkCollision(elemX, elemY + multiplier * dirY) &&
-				(elemX - this.leftStart) % TILE_SIZE === 0 &&
-				Math.abs(game.game.cursorY - (elemY + 35)) > 35
-			) {
-				let temp =
-					Math.abs(formattedY - (elemY + multiplier * dirY)) < 10
-						? formattedY
-						: elemY + multiplier * dirY
-				game.game.activeElement.y = Number(Number(temp).toFixed(3))
+				if (
+					dirX === -1 &&
+					(!this.neighbors.left ||
+						(this.neighbors.left && this.distance.right !== 0))
+				) {
+					this.distance.left += multiplier
+					this.distance.right = TILE_SIZE - this.distance.left
+
+					this.activeElement.x -= multiplier
+
+					if (this.distance.left >= 70) {
+						this.distance.left = 0
+						this.distance.right = 0
+						this.findNeighbors()
+						this.activeElement.col = col
+					}
+				} else if (
+					dirX === 1 &&
+					(!this.neighbors.right ||
+						(this.neighbors.right && this.distance.left !== 0))
+				) {
+					this.distance.right += multiplier
+					this.distance.left = TILE_SIZE - this.distance.right
+
+					this.activeElement.x += multiplier
+
+					if (this.distance.right >= 70) {
+						this.distance.left = 0
+						this.distance.right = 0
+						this.findNeighbors()
+						this.activeElement.col = col
+					}
+				}
+			} else if (diffY !== 0 && perpendX === 0) {
+				if (
+					dirY === -1 &&
+					(!this.neighbors.top ||
+						(this.neighbors.top && this.distance.bottom !== 0))
+				) {
+					this.distance.top += multiplier
+					this.distance.bottom = TILE_SIZE - this.distance.top
+
+					this.activeElement.y -= multiplier
+
+					if (this.distance.top >= 70) {
+						this.distance.top = 0
+						this.distance.bottom = 0
+						this.findNeighbors()
+						this.activeElement.row = row
+					}
+				} else if (
+					dirY === 1 &&
+					(!this.neighbors.bottom ||
+						(this.neighbors.bottom && this.distance.top !== 0))
+				) {
+					this.distance.bottom += multiplier
+					this.distance.top = TILE_SIZE - this.distance.bottom
+
+					this.activeElement.y += multiplier
+
+					if (this.distance.bottom >= 70) {
+						this.distance.top = 0
+						this.distance.bottom = 0
+						this.findNeighbors()
+						this.activeElement.row = row
+					}
+				}
 			}
 		}
 	}
 
 	startFollowing() {
-		this.app.ticker.add(this.followCursor)
+		this.app.ticker.add(this.followCursor, this)
 	}
 
 	stopFollowing() {
-		this.app.ticker.remove(this.followCursor)
+		this.app.ticker.remove(this.followCursor, this)
 	}
 
 	findNeighbors() {
@@ -294,7 +338,6 @@ class Game {
 			top: 0,
 			bottom: 0,
 		}
-		console.log(elements)
 	}
 
 	// Element movements handling on mouse move
@@ -316,106 +359,111 @@ class Game {
 			this.cursorX = cursorX
 			this.cursorY = cursorY
 
+			let dx = cursorX - TILE_SIZE / 2 - x
+			let dy = cursorY - TILE_SIZE / 2 - y
+
 			const isCursorOutside =
-				cursorX < this.activeElement.x - 10 ||
-				cursorX > this.activeElement.x + TILE_SIZE + 10 ||
-				cursorY < this.activeElement.y - 10 ||
-				cursorY > this.activeElement.y + TILE_SIZE + 10
+				Math.abs(dx) - 10 > TILE_SIZE / 2 || Math.abs(dy) - 10 > TILE_SIZE / 2
 
-			const dx = cursorX - TILE_SIZE / 2 - x
-			const dy = cursorY - TILE_SIZE / 2 - y
+			if (isCursorOutside) {
+				this.startFollowing()
+			} else {
+				this.stopFollowing()
 
-			const row = Math.floor((this.activeElement.y - this.topStart) / 70)
-			const col = Math.floor((this.activeElement.x - this.leftStart) / 70)
+				const row = Math.floor((this.activeElement.y - this.topStart) / 70)
+				const col = Math.floor((this.activeElement.x - this.leftStart) / 70)
 
-			const perpendX = Math.abs(x - this.leftStart) % TILE_SIZE
-			const perpendY = Math.abs(y - this.topStart) % TILE_SIZE
-
-			if (
-				!isCursorOutside &&
-				Math.abs(dx) > Math.abs(dy) + 2 &&
-				perpendY === 0
-			) {
-				// Horizontal movement
+				const perpendX = Math.abs(x - this.leftStart) % TILE_SIZE
+				const perpendY = Math.abs(y - this.topStart) % TILE_SIZE
+				console.log('dxy: ', dx, dy)
 				if (
-					dx < 0 &&
-					(!this.neighbors.left ||
-						(this.neighbors.left && this.distance.right !== 0))
+					!isCursorOutside &&
+					Math.abs(dx) > Math.abs(dy) + 2 &&
+					perpendY === 0
 				) {
-					this.distance.left += Math.abs(dx)
-					this.distance.right = TILE_SIZE - this.distance.left
+					console.log('dx1: ', dx)
+					// Horizontal movement
+					console.log('dx2: ', dx)
+					dx -= 2 * Math.sign(dx)
+					if (
+						dx < 0 &&
+						(!this.neighbors.left ||
+							(this.neighbors.left && this.distance.right !== 0))
+					) {
+						if (this.distance.left + Math.abs(dx) >= 65) {
+							element.x += this.distance.left - TILE_SIZE
+							this.distance.left = 0
+							this.distance.right = 0
+							this.findNeighbors()
+							this.activeElement.col = col
+						} else {
+							this.distance.left += Math.abs(dx)
+							this.distance.right = TILE_SIZE - this.distance.left
 
-					element.x +=
-						this.distance.left > 70
-							? this.distance.left - Math.abs(dx) - TILE_SIZE
-							: dx
-					if (this.distance.left >= 70) {
-						this.distance.left = 0
-						this.distance.right = 0
-						this.findNeighbors()
-						this.activeElement.col = col
+							element.x += dx
+						}
+					} else if (
+						dx > 0 &&
+						(!this.neighbors.right ||
+							(this.neighbors.right && this.distance.left !== 0))
+					) {
+						if (this.distance.right + Math.abs(dx) >= 65) {
+							element.x -= this.distance.right - TILE_SIZE
+							this.distance.right = 0
+							this.distance.left = 0
+							this.findNeighbors()
+							this.activeElement.col = col
+						} else {
+							this.distance.right += Math.abs(dx)
+							this.distance.left = TILE_SIZE - this.distance.right
+
+							element.x += dx
+						}
 					}
 				} else if (
-					dx > 0 &&
-					(!this.neighbors.right ||
-						(this.neighbors.right && this.distance.left !== 0))
+					!isCursorOutside &&
+					Math.abs(dy) > Math.abs(dx) + 2 &&
+					perpendX === 0
 				) {
-					this.distance.right += Math.abs(dx)
-					this.distance.left = TILE_SIZE - this.distance.right
+					// Vertical movement
+					console.log('dy1: ', dy)
+					dy -= 2 * Math.sign(dy)
+					console.log('dy2: ', dy)
+					if (
+						dy < 0 &&
+						(!this.neighbors.top ||
+							(this.neighbors.top && this.distance.bottom !== 0))
+					) {
+						if (this.distance.top + Math.abs(dy) >= 65) {
+							element.y += this.distance.top - TILE_SIZE
+							this.distance.top = 0
+							this.distance.bottom = 0
 
-					element.x +=
-						this.distance.right > 70
-							? TILE_SIZE - (this.distance.right - Math.abs(dx))
-							: dx
-					if (this.distance.right >= 70) {
-						this.distance.right = 0
-						this.distance.left = 0
-						this.findNeighbors()
-						this.activeElement.col = col
-					}
-				}
-			} else if (
-				!isCursorOutside &&
-				Math.abs(dy) > Math.abs(dx) + 2 &&
-				perpendX === 0
-			) {
-				// Vertical movement
-				if (
-					dy < 0 &&
-					(!this.neighbors.top ||
-						(this.neighbors.top && this.distance.bottom !== 0))
-				) {
-					this.distance.top += Math.abs(dy)
-					this.distance.bottom = TILE_SIZE - this.distance.top
+							this.findNeighbors()
+							this.activeElement.row = row
+						} else {
+							this.distance.top += Math.abs(dy)
+							this.distance.bottom = TILE_SIZE - this.distance.top
 
-					element.y +=
-						this.distance.top > 70
-							? this.distance.top - Math.abs(dy) - TILE_SIZE
-							: dy
-					if (this.distance.top >= 70) {
-						this.distance.top = 0
-						this.distance.bottom = 0
+							element.y += dy
+						}
+					} else if (
+						dy > 0 &&
+						(!this.neighbors.bottom ||
+							(this.neighbors.bottom && this.distance.top !== 0))
+					) {
+						if (this.distance.bottom + Math.abs(dy) >= 65) {
+							element.y -= this.distance.bottom - TILE_SIZE
+							this.distance.bottom = 0
+							this.distance.top = 0
+							this.findNeighbors()
+							this.activeElement.row = row
+						} else {
+							this.distance.bottom += Math.abs(dy)
+							this.distance.top = TILE_SIZE - this.distance.bottom
 
-						this.findNeighbors()
-						this.activeElement.row = row
-					}
-				} else if (
-					dy > 0 &&
-					(!this.neighbors.bottom ||
-						(this.neighbors.bottom && this.distance.top !== 0))
-				) {
-					this.distance.bottom += Math.abs(dy)
-					this.distance.top = TILE_SIZE - this.distance.bottom
-
-					element.y +=
-						this.distance.bottom > 70
-							? TILE_SIZE - (this.distance.bottom - Math.abs(dy))
-							: dy
-					if (this.distance.bottom >= 70) {
-						this.distance.bottom = 0
-						this.distance.top = 0
-						this.findNeighbors()
-						this.activeElement.row = row
+							element.y += dy
+						}
 					}
 				}
 			}
