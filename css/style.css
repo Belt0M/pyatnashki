@@ -8,8 +8,7 @@
 body {
 	min-height: 100vh;
 	overflow: hidden;
-	background: #472f22;
-	background: radial-gradient(circle, #472f22 40%, #1c130f 100%);
+	background: #2b1912;
 	color: #fff;
 }
 
@@ -20,11 +19,8 @@ body {
 	height: 100vh;
 	width: 100vw;
 	z-index: 100;
-	background: radial-gradient(
-		circle,
-		rgba(0, 0, 0, 0.25) 40%,
-		rgba(161, 37, 23, 0.3) 100%
-	);
+	background: radial-gradient(circle, #2b1912c1 40%, rgb(13, 13, 13) 100%);
+
 	backdrop-filter: blur(10px);
 }
 
@@ -95,8 +91,8 @@ body {
 .greeting-banner {
 	position: absolute;
 	inset: 0;
-	background: #472f22;
-	background: radial-gradient(circle, #472f22 40%, #1c130f 100%);
+	background: #2b1912;
+	background: radial-gradient(circle, #2b1912 40%, #1c130f 100%);
 	align-items: center;
 	justify-content: center;
 	font-size: 3.5rem;

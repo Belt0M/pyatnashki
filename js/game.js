@@ -83,7 +83,7 @@ class Game {
 		this.app.stage.addChild(img)
 
 		// Generate and add the level elements to the scene
-		this.difficulty = 0
+		this.difficulty = 2
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements.flat())
 		})
