@@ -26,18 +26,24 @@ class GUICore {
 		) {
 			this.session.game.difficulty += 1
 
+			// Clear canvas and hide the menu
 			this.session.game.clearCanvas()
 			this.hideMenu()
 
-			// Update timer
+			// Update a timer
 			this.session.game.remainingTime =
 				this.session.game.params.timers[this.session.game.difficulty]
 			this.session.game.startTimer()
 
+			// Add a background
+			let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png')
+			this.session.game.app.stage.addChild(img)
+
+			// Draw the new level
 			this.session.game.level.getLevel(
 				this.session.game.difficulty,
 				elements => {
-					this.session.game.app.stage.addChild(...elements)
+					this.session.game.app.stage.addChild(...elements.flat())
 				}
 			)
 		}
@@ -47,18 +53,24 @@ class GUICore {
 		if (this.session.game.difficulty - 1 >= 0) {
 			this.session.game.difficulty -= 1
 
+			// Clear canvas and hide the menu
 			this.session.game.clearCanvas()
 			this.hideMenu()
 
-			// Update timer
+			// Update a timer
 			this.session.game.remainingTime =
 				this.session.game.params.timers[this.session.game.difficulty]
 			this.session.game.startTimer()
 
+			// Add a background
+			let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png')
+			this.session.game.app.stage.addChild(img)
+
+			// Draw the new level
 			this.session.game.level.getLevel(
 				this.session.game.difficulty,
 				elements => {
-					this.session.game.app.stage.addChild(...elements)
+					this.session.game.app.stage.addChild(...elements.flat())
 				}
 			)
 		}

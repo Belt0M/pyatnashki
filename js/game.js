@@ -78,6 +78,10 @@ class Game {
 		this.level.urls = this.params.levels
 		this.level.enums = this.params.elements
 
+		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png')
+
+		this.app.stage.addChild(img)
+
 		// Generate and add the level elements to the scene
 		this.difficulty = 0
 		this.level.getLevel(this.difficulty, elements => {
@@ -92,15 +96,12 @@ class Game {
 	findSelectedElement(event) {
 		const cursorX = event.clientX - this.gameField.offsetLeft
 		const cursorY = event.clientY - this.gameField.offsetTop
-		// console.log(
-		// 	Math.floor((cursorY - this.topStart) / 70),
-		// 	Math.floor((cursorX - this.leftStart) / 70)
-		// )
+
 		const element =
 			this.level.elements[Math.floor((cursorY - this.topStart) / 70)][
 				Math.floor((cursorX - this.leftStart) / 70)
 			]
-		// console.log(element)
+
 		return element.alpha !== 0.7 && element
 	}
 
@@ -119,8 +120,12 @@ class Game {
 
 		if (element && allowedElements.includes(element.type)) {
 			this.activeElement = element
-			this.initCol = element.col
-			this.initRow = element.row
+
+			if (!element.initCol && !element.initRow) {
+				console.log('f')
+				element.initCol = element.col
+				element.initRow = element.row
+			}
 			this.activeElement.alpha = 0.75
 			this.findNeighbors()
 		}
@@ -130,32 +135,49 @@ class Game {
 		const row = Math.round((this.activeElement.y - this.topStart) / 70)
 		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
 
+		const elementToSwap = this.level.elements[row][col]
+
+		if (
+			(row === this.activeElement.initRow &&
+				col === this.activeElement.initCol) ||
+			elementToSwap.type === this.activeElement.type
+		) {
+			return
+		}
+
 		this.activeElement.col = col
 		this.activeElement.row = row
 
-		const elementToSwap = this.level.elements[row][col]
-		elementToSwap.col = this.initCol
-		elementToSwap.row = this.initRow
+		elementToSwap.col = this.activeElement.initCol
+		elementToSwap.row = this.activeElement.initRow
 
-		this.level.elements[this.initRow][this.initCol] = elementToSwap
+		console.log(
+			row,
+			col,
+			this.activeElement.initRow,
+			this.activeElement.initCol,
+			'type: ',
+			this.activeElement.type
+		)
+		this.level.elements[this.activeElement.initRow][
+			this.activeElement.initCol
+		] = elementToSwap
 		this.level.elements[row][col] = this.activeElement
+		console.log(
+			this.level.elements[this.activeElement.initRow][
+				this.activeElement.initCol
+			].type,
+			this.level.elements[row][col].type
+		)
 
-		this.initCol = col
-		this.initRow = row
+		this.activeElement.initCol = col
+		this.activeElement.initRow = row
 	}
 
 	// On mouse up reset the active element
 	handleMouseUp() {
 		this.stopFollowing()
 		if (this.activeElement) {
-			console.log('HandleUp:', this.level.elements)
-			console.log(
-				'elemX: ',
-				this.activeElement.x,
-				'elemY: ',
-				this.activeElement.y
-			)
-
 			let diffX = Math.abs(this.activeElement.x - this.leftStart) % TILE_SIZE
 			let diffY = Math.abs(this.activeElement.y - this.topStart) % TILE_SIZE
 			// Transfer the element to the nearest cell
@@ -172,10 +194,6 @@ class Game {
 				this.activeElement.y += diffY * sign
 				this.swapElements()
 			}
-
-			// this.completedElements[element.type] = true
-			// // Check whether all elements are completed
-			// this.checkIsLevelCompleted()
 
 			this.activeElement.alpha = 1
 			this.activeElement = null
@@ -227,64 +245,56 @@ class Game {
 	}
 
 	findNeighbors() {
-		this.swapElements()
-
 		const row = Math.round((this.activeElement.y - this.topStart) / 70)
 		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
+
 		const elements = this.level.elements
+		const targetElement = elements[row][col]
+		const currentElType = this.activeElement.type
 
 		const elementsArray = [0, 2, 3, 4, 5, 6, 7]
-		elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
+		currentElType !== 3 &&
+			elementsArray.splice(elementsArray.indexOf(currentElType), 1)
 
-		this.level.elements[
-			Math.round((this.activeElement.y - this.topStart) / 70)
-		][Math.round((this.activeElement.x - this.leftStart) / 70)]
+		// Check whether element was placed to the source cell
+		if (currentElType === targetElement.type && targetElement.alpha === 0.7) {
+			this.completedElements[currentElType] = true
+
+			// Check whether all elements are completed
+			this.checkIsLevelCompleted()
+		} else {
+			this.swapElements()
+		}
 
 		this.neighbors.left =
 			elements[row][col - 1] &&
-			[0, 2, 3, 4, 5, 6, 7].includes(elements[row][col - 1].type)
+			elementsArray.includes(elements[row][col - 1].type)
 				? elements[row][col - 1]
 				: null
-		console.log(
-			'row: ',
-			row,
-			'col: ',
-			col,
-			'left:',
-			elements[row][col - 1].type,
-			'top:',
-			elements[row - 1][col].type,
-			'right:',
-			elements[row][col + 1].type,
-			'bottom:',
-			elements[row + 1][col].type,
-			'elemX: ',
-			this.activeElement.x,
-			'elemY: ',
-			this.activeElement.y
-		)
+
 		this.neighbors.right =
 			elements[row][col + 1] &&
-			[0, 2, 3, 4, 5, 6, 7].includes(elements[row][col + 1].type)
+			elementsArray.includes(elements[row][col + 1].type)
 				? elements[row][col + 1]
 				: null
 		this.neighbors.top =
 			elements[row - 1][col] &&
-			[0, 2, 3, 4, 5, 6, 7].includes(elements[row - 1][col].type)
+			elementsArray.includes(elements[row - 1][col].type)
 				? elements[row - 1][col]
 				: null
 		this.neighbors.bottom =
 			elements[row + 1][col] &&
-			[0, 2, 3, 4, 5, 6, 7].includes(elements[row + 1][col].type)
+			elementsArray.includes(elements[row + 1][col].type)
 				? elements[row + 1][col]
 				: null
+
 		this.distance = {
 			left: 0,
 			right: 0,
 			top: 0,
 			bottom: 0,
 		}
-		console.log('Neighbors: ', this.neighbors)
+		console.log(elements)
 	}
 
 	// Element movements handling on mouse move
@@ -312,12 +322,6 @@ class Game {
 				cursorY < this.activeElement.y - 10 ||
 				cursorY > this.activeElement.y + TILE_SIZE + 10
 
-			// if (isCursorOutside) {
-			// 	this.startFollowing()
-			// } else {
-			// 	this.stopFollowing()
-			// }
-
 			const dx = cursorX - TILE_SIZE / 2 - x
 			const dy = cursorY - TILE_SIZE / 2 - y
 
@@ -329,19 +333,10 @@ class Game {
 
 			if (
 				!isCursorOutside &&
-				Math.abs(dx) > Math.abs(dy) + 5 &&
+				Math.abs(dx) > Math.abs(dy) + 2 &&
 				perpendY === 0
 			) {
 				// Horizontal movement
-				// console.log(
-				// 	'DistLeft: ',
-				// 	this.distance.left,
-				// 	'DistRight: ',
-				// 	this.distance.right,
-				// 	dx,
-				// 	element.x,
-				// 	element.y
-				// )
 				if (
 					dx < 0 &&
 					(!this.neighbors.left ||
@@ -381,16 +376,10 @@ class Game {
 				}
 			} else if (
 				!isCursorOutside &&
-				Math.abs(dy) > Math.abs(dx) + 5 &&
+				Math.abs(dy) > Math.abs(dx) + 2 &&
 				perpendX === 0
 			) {
 				// Vertical movement
-				// console.log(
-				// 	this.neighbors.top && this.distance.bottom !== 0,
-				// 	this.neighbors.top,
-				// 	this.distance.top,
-				// 	this.distance.bottom
-				// )
 				if (
 					dy < 0 &&
 					(!this.neighbors.top ||
@@ -433,46 +422,6 @@ class Game {
 		}
 	}
 
-	// Check for collisions with prohibited items for passage
-	checkCollision(x, y) {
-		// Create array with all level elements except active one
-		const elementsArray = [0, 2, 3, 4, 5, 6, 7]
-		elementsArray.splice(elementsArray.indexOf(this.activeElement.type), 1)
-		// Check for collisions with level elements
-		for (const element of this.level.elements) {
-			if (
-				element.type === this.activeElement.type &&
-				element.alpha === 0.7 &&
-				x === element.x &&
-				y === element.y
-			) {
-				this.completedElements[element.type] = true
-				// Check whether all elements are completed
-				this.checkIsLevelCompleted()
-			} else if (
-				x + TILE_SIZE > element.x &&
-				x < element.x + TILE_SIZE &&
-				y + TILE_SIZE > element.y &&
-				y < element.y + TILE_SIZE &&
-				elementsArray.includes(element.type)
-			) {
-				return true
-			} else if (
-				this.activeElement.type === 3 &&
-				[3, 4, 5, 6, 7].includes(element.type) &&
-				(element.alpha === 0.7 || element.alpha !== 0.75) &&
-				x + TILE_SIZE > element.x &&
-				x < element.x + TILE_SIZE &&
-				y + TILE_SIZE > element.y &&
-				y < element.y + TILE_SIZE
-			) {
-				return true
-			}
-		}
-
-		return false
-	}
-
 	checkIsLevelCompleted() {
 		const allElementsCompleted = Object.values(this.completedElements).every(
 			element => element === true
@@ -504,7 +453,6 @@ class Game {
 				Object.keys(this.params.elements).forEach(key => {
 					this.sprites[key] = PIXI.Assets.load(this.params.elements[key].url)
 				})
-				console.log(this.sprites)
 				this.isLoading = false
 				callback && callback()
 			} else {
