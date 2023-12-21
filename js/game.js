@@ -7,8 +7,6 @@ class Game {
 			backgroundAlpha: 0,
 		})
 
-		console.log(this.app.ticker)
-
 		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png')
 
 		this.app.stage.addChild(img)
@@ -29,6 +27,7 @@ class Game {
 		})
 
 		this.sprites = {}
+		this.incr = 0
 
 		this.leftStart = 127
 		this.topStart = 34
@@ -38,6 +37,13 @@ class Game {
 			right: 0,
 			top: 0,
 			bottom: 0,
+		}
+
+		this.direction = null
+		this.limit = 0
+		this.movementsCounter = {
+			x: 0,
+			y: 0,
 		}
 
 		this.neighbors = {
@@ -186,8 +192,11 @@ class Game {
 		}
 	}
 
-	followCursor() {
-		if (this.activeElement) {
+	followCursor(dt) {
+		this.incr += dt
+
+		if (this.activeElement && this.incr >= 5) {
+			this.incr = 0
 			const elemX = this.activeElement.x
 			const elemY = this.activeElement.y
 
@@ -359,8 +368,9 @@ class Game {
 			this.cursorX = cursorX
 			this.cursorY = cursorY
 
-			let dx = cursorX - TILE_SIZE / 2 - x
-			let dy = cursorY - TILE_SIZE / 2 - y
+			let dx = cursorX
+			let dy = cursorY
+			console.log(this.activeElement.x, this.activeElement.y, cursorX, cursorY)
 
 			const isCursorOutside =
 				Math.abs(dx) - 10 > TILE_SIZE / 2 || Math.abs(dy) - 10 > TILE_SIZE / 2
@@ -375,16 +385,18 @@ class Game {
 
 				const perpendX = Math.abs(x - this.leftStart) % TILE_SIZE
 				const perpendY = Math.abs(y - this.topStart) % TILE_SIZE
-				console.log('dxy: ', dx, dy)
-				if (
-					!isCursorOutside &&
-					Math.abs(dx) > Math.abs(dy) + 2 &&
-					perpendY === 0
-				) {
-					console.log('dx1: ', dx)
+				if (!isCursorOutside && Math.abs(dx) > Math.abs(dy) && perpendY === 0) {
+					this.direction = 1 // X
+					// if (Math.abs(dx > 3) && this.limit <= 5) {
+					// 	this.movementsCounter.x += Math.abs(dx)
+					// 	this.limit += 1 // X
+					// } else {
+					// 	this.movementsCounter.x = 0
+					// 	this.limit = 0
+					// }
+
 					// Horizontal movement
-					console.log('dx2: ', dx)
-					dx -= 2 * Math.sign(dx)
+					// dx -= 2 * Math.sign(dx)
 					if (
 						dx < 0 &&
 						(!this.neighbors.left ||
@@ -422,13 +434,12 @@ class Game {
 					}
 				} else if (
 					!isCursorOutside &&
-					Math.abs(dy) > Math.abs(dx) + 2 &&
+					Math.abs(dy) > Math.abs(dx) &&
 					perpendX === 0
 				) {
+					this.direction = -1 // X
 					// Vertical movement
-					console.log('dy1: ', dy)
-					dy -= 2 * Math.sign(dy)
-					console.log('dy2: ', dy)
+					// dy -= 2 * Math.sign(dy)
 					if (
 						dy < 0 &&
 						(!this.neighbors.top ||
