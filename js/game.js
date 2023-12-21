@@ -192,15 +192,68 @@ class Game {
 		}
 	}
 
+	translateX(dirX, multiplier, col) {
+		if (dirX === -1) {
+			this.distance.left += multiplier
+			this.distance.right = TILE_SIZE - this.distance.left
+
+			this.activeElement.x -= multiplier
+
+			if (this.distance.left >= 70) {
+				this.distance.left = 0
+				this.distance.right = 0
+				this.findNeighbors()
+				this.activeElement.col = col
+			}
+		} else if (dirX === 1) {
+			this.distance.right += multiplier
+			this.distance.left = TILE_SIZE - this.distance.right
+
+			this.activeElement.x += multiplier
+
+			if (this.distance.right >= 70) {
+				this.distance.left = 0
+				this.distance.right = 0
+				this.findNeighbors()
+				this.activeElement.col = col
+			}
+		}
+	}
+
+	translateY(dirY, multiplier, row) {
+		if (dirY === -1 && !this.neighbors.top) {
+			this.distance.top += multiplier
+			this.distance.bottom = TILE_SIZE - this.distance.top
+
+			this.activeElement.y -= multiplier
+
+			if (this.distance.top >= 70) {
+				this.distance.top = 0
+				this.distance.bottom = 0
+				this.findNeighbors()
+				this.activeElement.row = row
+			}
+		} else if (dirY === 1 && !this.neighbors.bottom) {
+			this.distance.bottom += multiplier
+			this.distance.top = TILE_SIZE - this.distance.bottom
+
+			this.activeElement.y += multiplier
+
+			if (this.distance.bottom >= 70) {
+				this.distance.top = 0
+				this.distance.bottom = 0
+				this.findNeighbors()
+				this.activeElement.row = row
+			}
+		}
+	}
+
 	followCursor(dt) {
 		this.incr += dt
 		if (this.activeElement && this.incr >= 5) {
 			this.incr = 0
 			const elemX = this.activeElement.x
 			const elemY = this.activeElement.y
-
-			const diffX = this.cursorX - elemX - TILE_SIZE / 2
-			const diffY = this.cursorY - elemY - TILE_SIZE / 2
 
 			const row = Math.floor((this.activeElement.y - this.topStart) / 70)
 			const col = Math.floor((this.activeElement.x - this.leftStart) / 70)
@@ -217,138 +270,22 @@ class Game {
 			const multiplier = 1
 
 			if (Math.abs(dx) > Math.abs(dy)) {
-				console.log(
-					'x',
-					Math.abs(dx),
-					Math.abs(dy),
-					perpendX,
-					perpendY,
-					this.neighbors
-				)
 				if (perpendY === 0 && !this.neighbors[dirX === -1 ? 'left' : 'right']) {
-					console.log('x2')
-					if (dirX === -1) {
-						console.log('x22')
-						this.distance.left += multiplier
-						this.distance.right = TILE_SIZE - this.distance.left
-
-						this.activeElement.x -= multiplier
-
-						if (this.distance.left >= 70) {
-							this.distance.left = 0
-							this.distance.right = 0
-							this.findNeighbors()
-							this.activeElement.col = col
-						}
-					} else if (dirX === 1) {
-						console.log('x23')
-						this.distance.right += multiplier
-						this.distance.left = TILE_SIZE - this.distance.right
-
-						this.activeElement.x += multiplier
-
-						if (this.distance.right >= 70) {
-							this.distance.left = 0
-							this.distance.right = 0
-							this.findNeighbors()
-							this.activeElement.col = col
-						}
-					}
+					this.translateX(dirX, multiplier, col)
 				} else if (
 					perpendX === 0 &&
 					!this.neighbors[dirY === -1 ? 'top' : 'bottom']
 				) {
-					console.log('x1', dirX, dirY)
-					if (dirY === -1 && !this.neighbors.top) {
-						console.log('x12')
-						this.distance.top += multiplier
-						this.distance.bottom = TILE_SIZE - this.distance.top
-
-						this.activeElement.y -= multiplier
-
-						if (this.distance.top >= 70) {
-							this.distance.top = 0
-							this.distance.bottom = 0
-							this.findNeighbors()
-							this.activeElement.row = row
-						}
-					} else if (dirY === 1 && !this.neighbors.bottom) {
-						console.log('x13')
-						this.distance.bottom += multiplier
-						this.distance.top = TILE_SIZE - this.distance.bottom
-
-						this.activeElement.y += multiplier
-
-						if (this.distance.bottom >= 70) {
-							this.distance.top = 0
-							this.distance.bottom = 0
-							this.findNeighbors()
-							this.activeElement.row = row
-						}
-					}
+					this.translateY(dirY, multiplier, row)
 				}
-			} else if (Math.abs(dy) > Math.abs(dx)) {
-				console.log('y', dx, dy)
+			} else if (Math.abs(dy) >= Math.abs(dx)) {
 				if (perpendX === 0 && !this.neighbors[dirY === -1 ? 'top' : 'bottom']) {
-					console.log('y1')
-					if (dirY === -1 && !this.neighbors.top) {
-						console.log('y12')
-						this.distance.top += multiplier
-						this.distance.bottom = TILE_SIZE - this.distance.top
-
-						this.activeElement.y -= multiplier
-
-						if (this.distance.top >= 70) {
-							this.distance.top = 0
-							this.distance.bottom = 0
-							this.findNeighbors()
-							this.activeElement.row = row
-						}
-					} else if (dirY === 1 && !this.neighbors.bottom) {
-						console.log('y13')
-						this.distance.bottom += multiplier
-						this.distance.top = TILE_SIZE - this.distance.bottom
-
-						this.activeElement.y += multiplier
-
-						if (this.distance.bottom >= 70) {
-							this.distance.top = 0
-							this.distance.bottom = 0
-							this.findNeighbors()
-							this.activeElement.row = row
-						}
-					}
+					this.translateY(dirY, multiplier, row)
 				} else if (
 					perpendY === 0 &&
 					!this.neighbors[dirX === -1 ? 'left' : 'right']
 				) {
-					if (dirX === -1) {
-						console.log('y22', dx, dy, dirX, dirY)
-						this.distance.left += multiplier
-						this.distance.right = TILE_SIZE - this.distance.left
-
-						this.activeElement.x -= multiplier
-
-						if (this.distance.left >= 70) {
-							this.distance.left = 0
-							this.distance.right = 0
-							this.findNeighbors()
-							this.activeElement.col = col
-						}
-					} else if (dirX === 1) {
-						console.log('y23')
-						this.distance.right += multiplier
-						this.distance.left = TILE_SIZE - this.distance.right
-
-						this.activeElement.x += multiplier
-
-						if (this.distance.right >= 70) {
-							this.distance.left = 0
-							this.distance.right = 0
-							this.findNeighbors()
-							this.activeElement.col = col
-						}
-					}
+					this.translateX(dirX, multiplier, col)
 				}
 			}
 		}
