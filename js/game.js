@@ -193,18 +193,18 @@ class Game {
 	}
 
 	translateX(dirX, multiplier, col) {
-		console.count('x')
-		console.log(
-			!this.neighbors.left,
-			this.neighbors.left && this.distance.right !== 0,
-			dirX
-		)
+		// console.count('x')
+		// console.log(
+		// !this.neighbors.left,
+		// this.neighbors.left && this.distance.right !== 0,
+		// dirX
+		// )
 		if (
 			dirX === -1 &&
 			(!this.neighbors.left ||
 				(this.neighbors.left && this.distance.right !== 0))
 		) {
-			console.count('x1')
+			// console.count('x1')
 			this.distance.left += multiplier
 			this.distance.right = TILE_SIZE - this.distance.left
 
@@ -221,7 +221,7 @@ class Game {
 			(!this.neighbors.right ||
 				(this.neighbors.right && this.distance.left !== 0))
 		) {
-			console.count('x2')
+			// console.count('x2')
 			this.distance.right += multiplier
 			this.distance.left = TILE_SIZE - this.distance.right
 
@@ -237,14 +237,14 @@ class Game {
 	}
 
 	translateY(dirY, multiplier, row) {
-		console.count('y')
-		console.log(this.activeElement.y)
+		// console.count('y')
+		// console.log(this.activeElement.y)
 		if (
 			dirY === -1 &&
 			(!this.neighbors.top ||
 				(this.neighbors.top && this.distance.bottom !== 0))
 		) {
-			console.count('y1')
+			// console.count('y1')
 			this.distance.top += multiplier
 			this.distance.bottom = TILE_SIZE - this.distance.top
 
@@ -261,7 +261,7 @@ class Game {
 			(!this.neighbors.bottom ||
 				(this.neighbors.bottom && this.distance.top !== 0))
 		) {
-			console.count('y2', this.activeElement.x)
+			// console.count('y2', this.activeElement.x)
 			this.distance.bottom += multiplier
 			this.distance.top = TILE_SIZE - this.distance.bottom
 
@@ -329,6 +329,14 @@ class Game {
 		this.app.ticker.remove(this.followCursor, this)
 	}
 
+	checkElement(element) {
+		const currentElType = this.activeElement.type
+		const elementsArray = [0, 2, 3, 4, 5, 6, 7]
+		currentElType !== 3 &&
+			elementsArray.splice(elementsArray.indexOf(currentElType), 1)
+		return element && elementsArray.includes(element.type) ? element : null
+	}
+
 	findNeighbors() {
 		const row = Math.round((this.activeElement.y - this.topStart) / 70)
 		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
@@ -337,41 +345,23 @@ class Game {
 		const targetElement = elements[row][col]
 		const currentElType = this.activeElement.type
 
-		const elementsArray = [0, 2, 3, 4, 5, 6, 7]
-		currentElType !== 3 &&
-			elementsArray.splice(elementsArray.indexOf(currentElType), 1)
-
+		console.log('d')
 		// Check whether element was placed to the source cell
 		if (currentElType === targetElement.type && targetElement.alpha === 0.7) {
+			console.log(targetElement.type)
 			this.completedElements[currentElType] = true
-
 			// Check whether all elements are completed
 			this.checkIsLevelCompleted()
 		} else {
 			this.swapElements()
 		}
 
-		this.neighbors.left =
-			elements[row][col - 1] &&
-			elementsArray.includes(elements[row][col - 1].type)
-				? elements[row][col - 1]
-				: null
-
-		this.neighbors.right =
-			elements[row][col + 1] &&
-			elementsArray.includes(elements[row][col + 1].type)
-				? elements[row][col + 1]
-				: null
-		this.neighbors.top =
-			elements[row - 1][col] &&
-			elementsArray.includes(elements[row - 1][col].type)
-				? elements[row - 1][col]
-				: null
-		this.neighbors.bottom =
-			elements[row + 1][col] &&
-			elementsArray.includes(elements[row + 1][col].type)
-				? elements[row + 1][col]
-				: null
+		this.neighbors = {
+			left: this.checkElement(elements[row][col - 1]),
+			right: this.checkElement(elements[row][col + 1]),
+			top: this.checkElement(elements[row - 1][col]),
+			bottom: this.checkElement(elements[row + 1][col]),
+		}
 
 		this.distance = {
 			left: 0,
