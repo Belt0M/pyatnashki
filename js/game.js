@@ -19,11 +19,63 @@ class Game {
 
 		this.gameField = null;
 		this.timerBody = null;
-
-		this._init();
 	}
 
 	/* PUBLIC */
+
+	init() {
+		this.app = new PIXI.Application({
+			width: 1024,
+			height: 768,
+			backgroundAlpha: 0,
+		});
+
+		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
+
+		this.app.stage.addChild(img);
+		this.app.ticker.add(this._update, this);
+
+		this.gameField = document.querySelector('.game-field');
+
+		this.gameField.appendChild(this.app.view);
+
+		this._fetchParams(`${BASE_URL}/matrices/game.json`, () => {
+			this.completedElements = {
+				4: false,
+				5: false,
+				6: false,
+				7: false,
+			};
+
+			this.activeElement = null;
+		});
+
+		this.distance = {
+			left: 0,
+			right: 0,
+			top: 0,
+			bottom: 0,
+		};
+
+		this.neighbors = {
+			left: null,
+			right: null,
+			top: null,
+			bottom: null,
+		};
+
+		this.timerBody = document.querySelector('.game-timer');
+
+		// Start game listener
+		document
+			.querySelector('.greeting-banner span')
+			.addEventListener('click', () => this.startGame());
+
+		// Mouse listeners
+		this.app.view.addEventListener('mousedown', this.onMouseDown.bind(this));
+		this.app.view.addEventListener('mouseup', this.onMouseUp.bind(this));
+		this.app.view.addEventListener('mousemove', this.onMouseMove.bind(this));
+	}
 
 	// Start - stop timer functionality
 	startTimer() {
@@ -38,7 +90,7 @@ class Game {
 
 			if (this.remainingTime <= 0) {
 				this.stopTimer();
-				game.gui.showMenu();
+				gameSession.gui.showMenu();
 			}
 		}, 1000);
 	}
@@ -85,13 +137,12 @@ class Game {
 	_findSelectedElement(event) {
 		const cursorX = event.clientX - this.gameField.offsetLeft;
 		const cursorY = event.clientY - this.gameField.offsetTop;
-
 		const element =
 			this.level.elements[Math.floor((cursorY - this.TOP_START) / 70)][
 				Math.floor((cursorX - this.LEFT_START) / 70)
 			];
 
-		return element.alpha !== 0.7 && element;
+		return element && element.alpha !== 0.7 && element;
 	}
 
 	_swapElements() {
@@ -99,7 +150,6 @@ class Game {
 		const col = Math.round((this.activeElement.x - this.LEFT_START) / 70);
 
 		if (this.completedElements[this.activeElement.type]) {
-			console.log(this.level.elements);
 			const cellEl = this.level.elements.flat().find(el => el.type === 1);
 			this.level.elements[this.activeElement.initRow][
 				this.activeElement.initCol
@@ -322,8 +372,7 @@ class Game {
 		);
 		if (allElementsCompleted) {
 			this.stopTimer();
-			game.gui.showMenu();
-			console.log(this.level.elements);
+			gameSession.gui.showMenu();
 		}
 	}
 
@@ -349,50 +398,6 @@ class Game {
 			console.error(`Network error while trying to fetch data from ${path}`);
 		};
 		req.send(null);
-	}
-
-	_init() {
-		this.app = new PIXI.Application({
-			width: 1024,
-			height: 768,
-			backgroundAlpha: 0,
-		});
-
-		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
-
-		this.app.stage.addChild(img);
-		this.app.ticker.add(this._update, this);
-
-		this.gameField = document.querySelector('.game-field');
-
-		this.gameField.appendChild(this.app.view);
-
-		this._fetchParams(`${BASE_URL}/matrices/game.json`, () => {
-			this.completedElements = {
-				4: false,
-				5: false,
-				6: false,
-				7: false,
-			};
-
-			this.activeElement = null;
-		});
-
-		this.distance = {
-			left: 0,
-			right: 0,
-			top: 0,
-			bottom: 0,
-		};
-
-		this.neighbors = {
-			left: null,
-			right: null,
-			top: null,
-			bottom: null,
-		};
-
-		this.timerBody = document.querySelector('.game-timer');
 	}
 
 	/* LISTENERS METHODS */

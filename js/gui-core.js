@@ -3,10 +3,33 @@ class GUICore {
 		this.session = session;
 		this.menu = null;
 
-		this._init();
+		this.init();
 	}
 
 	/* PUBLIC */
+
+	init() {
+		this.menu = document.querySelector('.menu-wrapper');
+
+		// Menu button click listener
+		document
+			.querySelector('.menu-btn')
+			.addEventListener('click', this.openMenu);
+
+		document
+			.querySelector('.menu-close')
+			.addEventListener('click', this.closeMenu);
+
+		// Menu listener
+		document
+			.querySelector('#menu-elements')
+			.addEventListener('click', this.menuController);
+
+		// Game over listener
+		document
+			.querySelector('.game-over')
+			.addEventListener('click', () => this.hideGameOver());
+	}
 
 	showMenu(isCompleted = true) {
 		const next = document.querySelector('#next');
@@ -29,10 +52,6 @@ class GUICore {
 			restart.disabled = true;
 		}
 		this.menu.style.display = 'flex';
-	}
-
-	_init() {
-		this.menu = document.querySelector('.menu-wrapper');
 	}
 
 	_nextLevel() {
