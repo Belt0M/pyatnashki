@@ -61,6 +61,8 @@ class LevelManager {
 				this.elements[row][el] = newEl
 				newEl.row = row
 				newEl.col = el
+				newEl.initRow = row
+				newEl.initCol = el
 				newEl.position.set(127 + el * TILE_SIZE, 34 + row * TILE_SIZE)
 			}
 		}

@@ -96,7 +96,7 @@ class Game {
 		this.app.stage.addChild(img)
 
 		// Generate and add the level elements to the scene
-		this.difficulty = 0
+		this.difficulty = 1
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements.flat())
 		})
@@ -147,6 +147,7 @@ class Game {
 		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
 
 		if (this.completedElements[this.activeElement.type]) {
+			console.log(this.level.elements)
 			const cellEl = this.level.elements.flat().find(el => el.type === 1)
 			this.level.elements[this.activeElement.initRow][
 				this.activeElement.initCol
@@ -161,6 +162,8 @@ class Game {
 				col === this.activeElement.initCol) ||
 			elementToSwap.type === this.activeElement.type
 		) {
+			this.activeElement.col = col
+			this.activeElement.row = row
 			return
 		}
 
@@ -218,10 +221,11 @@ class Game {
 				) {
 					this.completedElements[currentElType] = true
 					// Check whether all elements are completed
+					this.swapElements()
 					this.checkIsLevelCompleted()
+				} else {
+					this.swapElements()
 				}
-
-				this.swapElements()
 			}
 
 			this.activeElement.alpha = 1
@@ -388,10 +392,11 @@ class Game {
 		if (currentElType === targetElement.type && targetElement.alpha === 0.7) {
 			this.completedElements[currentElType] = true
 			// Check whether all elements are completed
+			this.swapElements()
 			this.checkIsLevelCompleted()
+		} else {
+			this.swapElements()
 		}
-
-		this.swapElements()
 
 		this.neighbors = {
 			left: this.checkElement(elements[row][col - 1]),
@@ -480,6 +485,7 @@ class Game {
 		if (allElementsCompleted) {
 			this.stopTimer()
 			game.gui.showMenu()
+			console.log(this.level.elements)
 		}
 	}
 
