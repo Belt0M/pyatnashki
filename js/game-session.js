@@ -3,6 +3,12 @@ class GameSession {
 		this.game = new Game();
 		this.gui = new GUICore(this);
 
+		this._init();
+	}
+
+	/* PRIVATE */
+
+	_init() {
 		// Start game listener
 		document
 			.querySelector('.greeting-banner span')
