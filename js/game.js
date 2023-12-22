@@ -20,8 +20,10 @@ class Game {
 		this.gameField = null;
 		this.timerBody = null;
 
-		this.init();
+		this._init();
 	}
+
+	/* PUBLIC */
 
 	// Start - stop timer functionality
 	startTimer() {
@@ -66,8 +68,21 @@ class Game {
 		this.startTimer(); // Start the timer when the game starts
 	}
 
+	clearCanvas() {
+		this.app.stage.children = [];
+		this.level.elements = [];
+		this.completedElements = {
+			4: false,
+			5: false,
+			6: false,
+			7: false,
+		};
+	}
+
+	/* PRIVATE */
+
 	// Find dragged element
-	findSelectedElement(event) {
+	_findSelectedElement(event) {
 		const cursorX = event.clientX - this.gameField.offsetLeft;
 		const cursorY = event.clientY - this.gameField.offsetTop;
 
@@ -79,31 +94,7 @@ class Game {
 		return element.alpha !== 0.7 && element;
 	}
 
-	// Om mouse down select element for future movements
-	handleMouseDown(event) {
-		const element = this.findSelectedElement(event);
-		const enums = this.params.elements;
-
-		const allowedElements = [
-			enums.wood.id,
-			enums.air.id,
-			enums.water.id,
-			enums.fire.id,
-			enums.earth.id,
-		];
-
-		if (element && allowedElements.includes(element.type)) {
-			this.activeElement = element;
-			if (!element.initCol && !element.initRow) {
-				element.initCol = element.col;
-				element.initRow = element.row;
-			}
-			this.activeElement.alpha = 0.75;
-			this.findNeighbors();
-		}
-	}
-
-	swapElements() {
+	_swapElements() {
 		const row = Math.round((this.activeElement.y - this.TOP_START) / 70);
 		const col = Math.round((this.activeElement.x - this.LEFT_START) / 70);
 
@@ -143,54 +134,7 @@ class Game {
 		this.activeElement.initRow = row;
 	}
 
-	// On mouse up reset the active element
-	handleMouseUp() {
-		this.isFollowing = false;
-
-		if (this.activeElement) {
-			let diffX = Math.abs(this.activeElement.x - this.LEFT_START) % TILE_SIZE;
-			let diffY = Math.abs(this.activeElement.y - this.TOP_START) % TILE_SIZE;
-			// Transfer the element to the nearest cell
-			if (diffX !== 0) {
-				const sign = diffX >= TILE_SIZE / 2 ? 1 : -1;
-				diffX = sign > 0 ? TILE_SIZE - diffX : diffX;
-
-				this.activeElement.x += diffX * sign;
-				this.swapElements();
-			} else if (diffY !== 0) {
-				const sign = diffY >= TILE_SIZE / 2 ? 1 : -1;
-				diffY = sign > 0 ? TILE_SIZE - diffY : diffY;
-
-				this.activeElement.y += diffY * sign;
-
-				const row = Math.round(
-					(this.activeElement.y - this.TOP_START) / TILE_SIZE
-				);
-				const col = Math.round(
-					(this.activeElement.x - this.LEFT_START) / TILE_SIZE
-				);
-				const targetElement = this.level.elements[row][col];
-				const currentElType = this.activeElement.type;
-
-				if (
-					currentElType === targetElement.type &&
-					targetElement.alpha === 0.7
-				) {
-					this.completedElements[currentElType] = true;
-					// Check whether all elements are completed
-					this.swapElements();
-					this.checkIsLevelCompleted();
-				} else {
-					this.swapElements();
-				}
-			}
-
-			this.activeElement.alpha = 1;
-			this.activeElement = null;
-		}
-	}
-
-	translateX(dirX, multiplier, col) {
+	_translateX(dirX, multiplier, col) {
 		if (
 			dirX === -1 &&
 			(!this.neighbors.left ||
@@ -200,7 +144,7 @@ class Game {
 				this.activeElement.x += this.distance.left - TILE_SIZE;
 				this.distance.left = 0;
 				this.distance.right = 0;
-				this.findNeighbors();
+				this._findNeighbors();
 				this.activeElement.col = col;
 			} else {
 				this.distance.left += multiplier;
@@ -217,7 +161,7 @@ class Game {
 				this.activeElement.x -= this.distance.right - TILE_SIZE;
 				this.distance.right = 0;
 				this.distance.left = 0;
-				this.findNeighbors();
+				this._findNeighbors();
 				this.activeElement.col = col;
 			} else {
 				this.distance.right += multiplier;
@@ -228,7 +172,7 @@ class Game {
 		}
 	}
 
-	translateY(dirY, multiplier, row) {
+	_translateY(dirY, multiplier, row) {
 		if (
 			dirY === -1 &&
 			(!this.neighbors.top ||
@@ -239,7 +183,7 @@ class Game {
 				this.distance.top = 0;
 				this.distance.bottom = 0;
 
-				this.findNeighbors();
+				this._findNeighbors();
 				this.activeElement.row = row;
 			} else {
 				this.distance.top += multiplier;
@@ -256,7 +200,7 @@ class Game {
 				this.activeElement.y -= this.distance.bottom - TILE_SIZE;
 				this.distance.bottom = 0;
 				this.distance.top = 0;
-				this.findNeighbors();
+				this._findNeighbors();
 				this.activeElement.row = row;
 			} else {
 				this.distance.bottom += multiplier;
@@ -267,7 +211,7 @@ class Game {
 		}
 	}
 
-	followCursor() {
+	_followCursor() {
 		if (this.activeElement) {
 			const elemX = this.activeElement.x;
 			const elemY = this.activeElement.y;
@@ -292,7 +236,7 @@ class Game {
 						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
 							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
 				) {
-					this.translateX(dirX, multiplier, col);
+					this._translateX(dirX, multiplier, col);
 				} else if (
 					perpendX === 0 &&
 					Math.abs(dy) > 5 &&
@@ -300,7 +244,7 @@ class Game {
 						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
 							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
 				) {
-					this.translateY(dirY, multiplier, row);
+					this._translateY(dirY, multiplier, row);
 				}
 			} else if (Math.abs(dy) >= Math.abs(dx)) {
 				if (
@@ -309,7 +253,7 @@ class Game {
 						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
 							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
 				) {
-					this.translateY(dirY, multiplier, row);
+					this._translateY(dirY, multiplier, row);
 				} else if (
 					perpendY === 0 &&
 					Math.abs(dx) > 5 &&
@@ -317,19 +261,19 @@ class Game {
 						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
 							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
 				) {
-					this.translateX(dirX, multiplier, col);
+					this._translateX(dirX, multiplier, col);
 				}
 			}
 		}
 	}
 
-	update() {
+	_update() {
 		if (this.isFollowing) {
-			this.followCursor();
+			this._followCursor();
 		}
 	}
 
-	checkElement(element) {
+	_checkElement(element) {
 		const currentElType = this.activeElement.type;
 		const elementsArray = [0, 2, 3, 4, 5, 6, 7];
 		currentElType !== 3 &&
@@ -337,7 +281,7 @@ class Game {
 		return element && elementsArray.includes(element.type) ? element : null;
 	}
 
-	findNeighbors() {
+	_findNeighbors() {
 		const row = Math.round((this.activeElement.y - this.TOP_START) / TILE_SIZE);
 		const col = Math.round(
 			(this.activeElement.x - this.LEFT_START) / TILE_SIZE
@@ -351,17 +295,17 @@ class Game {
 		if (currentElType === targetElement.type && targetElement.alpha === 0.7) {
 			this.completedElements[currentElType] = true;
 			// Check whether all elements are completed
-			this.swapElements();
-			this.checkIsLevelCompleted();
+			this._swapElements();
+			this._checkIsLevelCompleted();
 		} else {
-			this.swapElements();
+			this._swapElements();
 		}
 
 		this.neighbors = {
-			left: this.checkElement(elements[row][col - 1]),
-			right: this.checkElement(elements[row][col + 1]),
-			top: this.checkElement(elements[row - 1][col]),
-			bottom: this.checkElement(elements[row + 1][col]),
+			left: this._checkElement(elements[row][col - 1]),
+			right: this._checkElement(elements[row][col + 1]),
+			top: this._checkElement(elements[row - 1][col]),
+			bottom: this._checkElement(elements[row + 1][col]),
 		};
 
 		this.distance = {
@@ -372,8 +316,160 @@ class Game {
 		};
 	}
 
+	_checkIsLevelCompleted() {
+		const allElementsCompleted = Object.values(this.completedElements).every(
+			element => element === true
+		);
+		if (allElementsCompleted) {
+			this.stopTimer();
+			game.gui.showMenu();
+			console.log(this.level.elements);
+		}
+	}
+
+	_fetchParams(path, callback) {
+		var req = new XMLHttpRequest();
+		req.overrideMimeType('application/json');
+		req.open('GET', path, true);
+		req.onload = () => {
+			if (req.status === 200) {
+				this.params = JSON.parse(req.responseText);
+				Object.keys(this.params.elements).forEach(key => {
+					this.sprites[key] = PIXI.Assets.load(this.params.elements[key].url);
+				});
+				this.isLoading = false;
+				callback && callback();
+			} else {
+				console.error(
+					`Failed to fetch data from ${path}. Status: ${req.status}`
+				);
+			}
+		};
+		req.onerror = () => {
+			console.error(`Network error while trying to fetch data from ${path}`);
+		};
+		req.send(null);
+	}
+
+	_init() {
+		this.app = new PIXI.Application({
+			width: 1024,
+			height: 768,
+			backgroundAlpha: 0,
+		});
+
+		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
+
+		this.app.stage.addChild(img);
+		this.app.ticker.add(this._update, this);
+
+		this.gameField = document.querySelector('.game-field');
+
+		this.gameField.appendChild(this.app.view);
+
+		this._fetchParams(`${BASE_URL}/matrices/game.json`, () => {
+			this.completedElements = {
+				4: false,
+				5: false,
+				6: false,
+				7: false,
+			};
+
+			this.activeElement = null;
+		});
+
+		this.distance = {
+			left: 0,
+			right: 0,
+			top: 0,
+			bottom: 0,
+		};
+
+		this.neighbors = {
+			left: null,
+			right: null,
+			top: null,
+			bottom: null,
+		};
+
+		this.timerBody = document.querySelector('.game-timer');
+	}
+
+	/* LISTENERS METHODS */
+
+	// Om mouse down select element for future movements
+	onMouseDown(event) {
+		const element = this._findSelectedElement(event);
+		const enums = this.params.elements;
+
+		const allowedElements = [
+			enums.wood.id,
+			enums.air.id,
+			enums.water.id,
+			enums.fire.id,
+			enums.earth.id,
+		];
+
+		if (element && allowedElements.includes(element.type)) {
+			this.activeElement = element;
+			if (!element.initCol && !element.initRow) {
+				element.initCol = element.col;
+				element.initRow = element.row;
+			}
+			this.activeElement.alpha = 0.75;
+			this._findNeighbors();
+		}
+	}
+
+	// On mouse up reset the active element
+	onMouseUp() {
+		this.isFollowing = false;
+
+		if (this.activeElement) {
+			let diffX = Math.abs(this.activeElement.x - this.LEFT_START) % TILE_SIZE;
+			let diffY = Math.abs(this.activeElement.y - this.TOP_START) % TILE_SIZE;
+			// Transfer the element to the nearest cell
+			if (diffX !== 0) {
+				const sign = diffX >= TILE_SIZE / 2 ? 1 : -1;
+				diffX = sign > 0 ? TILE_SIZE - diffX : diffX;
+
+				this.activeElement.x += diffX * sign;
+				this._swapElements();
+			} else if (diffY !== 0) {
+				const sign = diffY >= TILE_SIZE / 2 ? 1 : -1;
+				diffY = sign > 0 ? TILE_SIZE - diffY : diffY;
+
+				this.activeElement.y += diffY * sign;
+
+				const row = Math.round(
+					(this.activeElement.y - this.TOP_START) / TILE_SIZE
+				);
+				const col = Math.round(
+					(this.activeElement.x - this.LEFT_START) / TILE_SIZE
+				);
+				const targetElement = this.level.elements[row][col];
+				const currentElType = this.activeElement.type;
+
+				if (
+					currentElType === targetElement.type &&
+					targetElement.alpha === 0.7
+				) {
+					this.completedElements[currentElType] = true;
+					// Check whether all elements are completed
+					this._swapElements();
+					this._checkIsLevelCompleted();
+				} else {
+					this._swapElements();
+				}
+			}
+
+			this.activeElement.alpha = 1;
+			this.activeElement = null;
+		}
+	}
+
 	// Element movements handling on mouse move
-	handleMouseMove(event) {
+	onMouseMove(event) {
 		// Cursor Coordinates
 		const cursorX = event.clientX - this.gameField.offsetLeft;
 		const cursorY = event.clientY - this.gameField.offsetTop;
@@ -411,103 +507,13 @@ class Game {
 				if (Math.abs(dx) > Math.abs(dy) + 2 && perpendY === 0) {
 					// Horizontal movement
 					dx -= 2 * Math.sign(dx);
-					this.translateX(Math.sign(dx), Math.abs(dx), col);
+					this._translateX(Math.sign(dx), Math.abs(dx), col);
 				} else if (Math.abs(dy) > Math.abs(dx) + 2 && perpendX === 0) {
 					// Vertical movement
 					dy -= 2 * Math.sign(dy);
-					this.translateY(Math.sign(dy), Math.abs(dy), row);
+					this._translateY(Math.sign(dy), Math.abs(dy), row);
 				}
 			}
 		}
-	}
-
-	checkIsLevelCompleted() {
-		const allElementsCompleted = Object.values(this.completedElements).every(
-			element => element === true
-		);
-		if (allElementsCompleted) {
-			this.stopTimer();
-			game.gui.showMenu();
-			console.log(this.level.elements);
-		}
-	}
-
-	clearCanvas() {
-		this.app.stage.children = [];
-		this.level.elements = [];
-		this.completedElements = {
-			4: false,
-			5: false,
-			6: false,
-			7: false,
-		};
-	}
-
-	fetchParams(path, callback) {
-		var req = new XMLHttpRequest();
-		req.overrideMimeType('application/json');
-		req.open('GET', path, true);
-		req.onload = () => {
-			if (req.status === 200) {
-				this.params = JSON.parse(req.responseText);
-				Object.keys(this.params.elements).forEach(key => {
-					this.sprites[key] = PIXI.Assets.load(this.params.elements[key].url);
-				});
-				this.isLoading = false;
-				callback && callback();
-			} else {
-				console.error(
-					`Failed to fetch data from ${path}. Status: ${req.status}`
-				);
-			}
-		};
-		req.onerror = () => {
-			console.error(`Network error while trying to fetch data from ${path}`);
-		};
-		req.send(null);
-	}
-
-	init() {
-		this.app = new PIXI.Application({
-			width: 1024,
-			height: 768,
-			backgroundAlpha: 0,
-		});
-
-		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
-
-		this.app.stage.addChild(img);
-		this.app.ticker.add(this.update, this);
-
-		this.gameField = document.querySelector('.game-field');
-
-		this.gameField.appendChild(this.app.view);
-
-		this.fetchParams(`${BASE_URL}/matrices/game.json`, () => {
-			this.completedElements = {
-				4: false,
-				5: false,
-				6: false,
-				7: false,
-			};
-
-			this.activeElement = null;
-		});
-
-		this.distance = {
-			left: 0,
-			right: 0,
-			top: 0,
-			bottom: 0,
-		};
-
-		this.neighbors = {
-			left: null,
-			right: null,
-			top: null,
-			bottom: null,
-		};
-
-		this.timerBody = document.querySelector('.game-timer');
 	}
 }
