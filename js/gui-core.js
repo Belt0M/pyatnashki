@@ -47,6 +47,7 @@ class GUICore {
 				this.session.game.difficulty,
 				elements => {
 					this.session.game.app.stage.addChild(...elements.flat())
+					console.log('Next:', this.session.game.level.elements)
 				}
 			)
 		}

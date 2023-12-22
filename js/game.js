@@ -99,6 +99,7 @@ class Game {
 		this.difficulty = 0
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements.flat())
+			console.log('Start', this.level.elements)
 		})
 
 		this.remainingTime = this.params.timers[this.difficulty]
@@ -295,7 +296,7 @@ class Game {
 			const dirX = Math.abs(dx) > 3 ? Math.sign(dx) : 0
 			const dirY = Math.abs(dy) > 3 ? Math.sign(dy) : 0
 
-			const multiplier = 7
+			const multiplier = 8.75
 
 			if (Math.abs(dx) > Math.abs(dy)) {
 				if (perpendY === 0 && !this.neighbors[dirX === -1 ? 'left' : 'right']) {
