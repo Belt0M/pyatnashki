@@ -129,3 +129,43 @@ body {
 	cursor: pointer;
 	z-index: 1000;
 }
+
+.menu-btn {
+	position: absolute;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	top: 1.5rem;
+	left: 1.5rem;
+	color: #fff;
+	font-size: 1.6rem;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 50%;
+	background-color: #5d3e2e;
+	border: none;
+	cursor: pointer;
+	transition: 0.3s;
+}
+
+.menu-btn:hover {
+	scale: 103%;
+	background-color: #614537;
+}
+
+.menu-close {
+	display: none;
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	font-size: 1.4rem;
+	color: #fff;
+	border: none;
+	z-index: 100;
+	cursor: pointer;
+	transition: 0.3s;
+}
+
+.menu-close:hover {
+	scale: 103%;
+}

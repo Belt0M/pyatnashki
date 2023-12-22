@@ -111,28 +111,32 @@ class GUICore {
 		document.querySelector('.greeting-banner').style.display = 'flex'
 	}
 
-	showMenu() {
+	showMenu(isCompleted = true) {
+		const next = document.querySelector('#next')
+		const prev = document.querySelector('#prev')
+		const restart = document.querySelector('#restart')
 		if (
 			this.session.game.difficulty + 1 ===
 			this.session.game.params.levels.length
 		) {
 			this.showGameOver()
-			document.querySelector('#next').disabled = true
-			document.querySelector('#prev').disabled = false
+			next.disabled = true
+			prev.disabled = false
 		} else if (this.session.game.difficulty === 0) {
-			document.querySelector('#next').disabled = false
-			document.querySelector('#prev').disabled = true
-			document.querySelector('#restart').disabled = false
+			next.disabled = !isCompleted ? true : false
+			prev.disabled = true
+			restart.disabled = false
 		} else {
-			document.querySelector('#next').disabled = false
-			document.querySelector('#prev').disabled = false
-			document.querySelector('#restart').disabled = true
+			next.disabled = !isCompleted ? true : false
+			prev.disabled = false
+			restart.disabled = true
 		}
 		this.menu.style.display = 'flex'
 	}
 
 	hideMenu() {
 		this.menu.style.display = 'none'
+		document.querySelector('.menu-close').style.display = 'none'
 	}
 
 	showGameOver() {
@@ -141,5 +145,16 @@ class GUICore {
 
 	hideGameOver() {
 		document.querySelector('.game-over').style.display = 'none'
+	}
+
+	openMenu() {
+		this.showMenu(false)
+		document.querySelector('.menu-close').style.display = 'block'
+		this.session.game.stopTimer()
+	}
+
+	closeMenu() {
+		this.hideMenu()
+		this.session.game.startTimer()
 	}
 }

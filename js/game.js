@@ -186,6 +186,7 @@ class Game {
 			x: 0,
 			y: 0,
 		}
+
 		if (this.activeElement) {
 			let diffX = Math.abs(this.activeElement.x - this.leftStart) % TILE_SIZE
 			let diffY = Math.abs(this.activeElement.y - this.topStart) % TILE_SIZE
@@ -201,6 +202,25 @@ class Game {
 				diffY = sign > 0 ? TILE_SIZE - diffY : diffY
 
 				this.activeElement.y += diffY * sign
+
+				const row = Math.round(
+					(this.activeElement.y - this.topStart) / TILE_SIZE
+				)
+				const col = Math.round(
+					(this.activeElement.x - this.leftStart) / TILE_SIZE
+				)
+				const targetElement = this.level.elements[row][col]
+				const currentElType = this.activeElement.type
+
+				if (
+					currentElType === targetElement.type &&
+					targetElement.alpha === 0.7
+				) {
+					this.completedElements[currentElType] = true
+					// Check whether all elements are completed
+					this.checkIsLevelCompleted()
+				}
+
 				this.swapElements()
 			}
 
@@ -336,7 +356,6 @@ class Game {
 						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
 							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
 				) {
-					console.log(multiplier, this.activeElement.x)
 					this.translateX(dirX, multiplier, col)
 				}
 			}
@@ -358,8 +377,8 @@ class Game {
 	}
 
 	findNeighbors() {
-		const row = Math.round((this.activeElement.y - this.topStart) / 70)
-		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
+		const row = Math.round((this.activeElement.y - this.topStart) / TILE_SIZE)
+		const col = Math.round((this.activeElement.x - this.leftStart) / TILE_SIZE)
 
 		const elements = this.level.elements
 		const targetElement = elements[row][col]
