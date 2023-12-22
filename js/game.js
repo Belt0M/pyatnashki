@@ -202,13 +202,12 @@ class Game {
 	}
 
 	translateX(dirX, multiplier, col) {
-		console.log(dirX, multiplier, col)
 		if (
 			dirX === -1 &&
 			(!this.neighbors.left ||
 				(this.neighbors.left && this.distance.right !== 0))
 		) {
-			if (this.distance.left + multiplier >= 65) {
+			if (this.distance.left + multiplier > 65) {
 				this.activeElement.x += this.distance.left - TILE_SIZE
 				this.distance.left = 0
 				this.distance.right = 0
@@ -225,7 +224,7 @@ class Game {
 			(!this.neighbors.right ||
 				(this.neighbors.right && this.distance.left !== 0))
 		) {
-			if (this.distance.right + multiplier >= 65) {
+			if (this.distance.right + multiplier > 65) {
 				this.activeElement.x -= this.distance.right - TILE_SIZE
 				this.distance.right = 0
 				this.distance.left = 0
@@ -246,7 +245,7 @@ class Game {
 			(!this.neighbors.top ||
 				(this.neighbors.top && this.distance.bottom !== 0))
 		) {
-			if (this.distance.top + multiplier >= 65) {
+			if (this.distance.top + multiplier > 65) {
 				this.activeElement.y += this.distance.top - TILE_SIZE
 				this.distance.top = 0
 				this.distance.bottom = 0
@@ -264,7 +263,7 @@ class Game {
 			(!this.neighbors.bottom ||
 				(this.neighbors.bottom && this.distance.top !== 0))
 		) {
-			if (this.distance.bottom + multiplier >= 65) {
+			if (this.distance.bottom + multiplier > 65) {
 				this.activeElement.y -= this.distance.bottom - TILE_SIZE
 				this.distance.bottom = 0
 				this.distance.top = 0
@@ -293,10 +292,10 @@ class Game {
 			let dx = this.cursorX - TILE_SIZE / 2 - elemX
 			let dy = this.cursorY - TILE_SIZE / 2 - elemY
 
-			const dirX = Math.sign(dx)
-			const dirY = Math.sign(dy)
+			const dirX = Math.abs(dx) > 3 ? Math.sign(dx) : 0
+			const dirY = Math.abs(dy) > 3 ? Math.sign(dy) : 0
 
-			const multiplier = 5
+			const multiplier = 7
 
 			if (Math.abs(dx) > Math.abs(dy)) {
 				if (perpendY === 0 && !this.neighbors[dirX === -1 ? 'left' : 'right']) {
@@ -310,7 +309,12 @@ class Game {
 					this.translateY(dirY, multiplier, row)
 				}
 			} else if (Math.abs(dy) >= Math.abs(dx)) {
-				if (perpendX === 0 && !this.neighbors[dirY === -1 ? 'top' : 'bottom']) {
+				if (
+					perpendX === 0 &&
+					(!this.neighbors[dirY === -1 ? 'top' : 'bottom'] ||
+						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
+							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
+				) {
 					this.translateY(dirY, multiplier, row)
 				} else if (
 					perpendY === 0 &&
@@ -393,7 +397,7 @@ class Game {
 			const isCursorOutside =
 				Math.abs(dx) > TILE_SIZE / 2 || Math.abs(dy) > TILE_SIZE / 2
 
-			if (isCursorOutside && !this.isFollowing) {
+			if (isCursorOutside) {
 				this.isFollowing = true
 			} else {
 				this.isFollowing = false
@@ -403,16 +407,14 @@ class Game {
 
 				const perpendX = Math.abs(x - this.leftStart) % TILE_SIZE
 				const perpendY = Math.abs(y - this.topStart) % TILE_SIZE
+
 				if (dx === 0) {
 					this.movementsCounter.x = 0
 				} else if (dy === 0) {
 					this.movementsCounter.y = 0
 				}
-				if (
-					!isCursorOutside &&
-					Math.abs(dx) > Math.abs(dy) + 2 &&
-					perpendY === 0
-				) {
+
+				if (Math.abs(dx) > Math.abs(dy) + 2 && perpendY === 0) {
 					// this.movementsCounter.x++
 
 					// if (Math.abs(dx > 3) && this.limit <= 5) {
@@ -424,17 +426,11 @@ class Game {
 					// }
 					// Horizontal movement
 					dx -= 2 * Math.sign(dx)
-
 					this.translateX(Math.sign(dx), Math.abs(dx), col)
-				} else if (
-					!isCursorOutside &&
-					Math.abs(dy) > Math.abs(dx) + 2 &&
-					perpendX === 0
-				) {
+				} else if (Math.abs(dy) > Math.abs(dx) + 2 && perpendX === 0) {
 					// this.movementsCounter.y++
 					// Vertical movement
 					dy -= 2 * Math.sign(dy)
-
 					this.translateY(Math.sign(dy), Math.abs(dy), row)
 				}
 			}
