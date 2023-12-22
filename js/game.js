@@ -314,11 +314,12 @@ class Game {
 					this.translateX(dirX, multiplier, col)
 				} else if (
 					perpendX === 0 &&
+					Math.abs(dy) > 5 &&
 					(!this.neighbors[dirY === -1 ? 'top' : 'bottom'] ||
 						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
 							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
 				) {
-					this.translateY(dirY, 4.375, row)
+					this.translateY(dirY, multiplier, row)
 				}
 			} else if (Math.abs(dy) >= Math.abs(dx)) {
 				if (
@@ -330,12 +331,13 @@ class Game {
 					this.translateY(dirY, multiplier, row)
 				} else if (
 					perpendY === 0 &&
+					Math.abs(dx) > 5 &&
 					(!this.neighbors[dirX === -1 ? 'left' : 'right'] ||
 						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
 							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
 				) {
 					console.log(multiplier, this.activeElement.x)
-					this.translateX(dirX, 4.375, col)
+					this.translateX(dirX, multiplier, col)
 				}
 			}
 		}
