@@ -147,6 +147,14 @@ class Game {
 		const row = Math.round((this.activeElement.y - this.topStart) / 70)
 		const col = Math.round((this.activeElement.x - this.leftStart) / 70)
 
+		if (this.completedElements[this.activeElement.type]) {
+			const cellEl = this.level.elements.flat().find(el => el.type === 1)
+			this.level.elements[this.activeElement.initRow][
+				this.activeElement.initCol
+			] = cellEl
+			return
+		}
+
 		const elementToSwap = this.level.elements[row][col]
 
 		if (
@@ -299,7 +307,12 @@ class Game {
 			const multiplier = 8.75
 
 			if (Math.abs(dx) > Math.abs(dy)) {
-				if (perpendY === 0 && !this.neighbors[dirX === -1 ? 'left' : 'right']) {
+				if (
+					perpendY === 0 &&
+					(!this.neighbors[dirX === -1 ? 'left' : 'right'] ||
+						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
+							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
+				) {
 					this.translateX(dirX, multiplier, col)
 				} else if (
 					perpendX === 0 &&
@@ -319,7 +332,9 @@ class Game {
 					this.translateY(dirY, multiplier, row)
 				} else if (
 					perpendY === 0 &&
-					!this.neighbors[dirX === -1 ? 'left' : 'right']
+					(!this.neighbors[dirX === -1 ? 'left' : 'right'] ||
+						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
+							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
 				) {
 					this.translateX(dirX, multiplier, col)
 				}
@@ -354,9 +369,9 @@ class Game {
 			this.completedElements[currentElType] = true
 			// Check whether all elements are completed
 			this.checkIsLevelCompleted()
-		} else {
-			this.swapElements()
 		}
+
+		this.swapElements()
 
 		this.neighbors = {
 			left: this.checkElement(elements[row][col - 1]),
