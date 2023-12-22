@@ -10,6 +10,7 @@ class Game {
 		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png')
 
 		this.app.stage.addChild(img)
+		this.app.ticker.add(this.update, this)
 
 		this.gameField = document.querySelector('.game-field')
 
@@ -29,8 +30,12 @@ class Game {
 		this.sprites = {}
 		this.incr = 0
 
+		this.counter = 0
+
 		this.leftStart = 127
 		this.topStart = 34
+
+		this.isFollowing = false
 
 		this.distance = {
 			left: 0,
@@ -168,7 +173,11 @@ class Game {
 
 	// On mouse up reset the active element
 	handleMouseUp() {
-		this.stopFollowing()
+		this.isFollowing = false
+		this.movementsCounter = {
+			x: 0,
+			y: 0,
+		}
 		if (this.activeElement) {
 			let diffX = Math.abs(this.activeElement.x - this.leftStart) % TILE_SIZE
 			let diffY = Math.abs(this.activeElement.y - this.topStart) % TILE_SIZE
@@ -193,93 +202,85 @@ class Game {
 	}
 
 	translateX(dirX, multiplier, col) {
-		// console.count('x')
-		// console.log(
-		// !this.neighbors.left,
-		// this.neighbors.left && this.distance.right !== 0,
-		// dirX
-		// )
+		console.log(dirX, multiplier, col)
 		if (
 			dirX === -1 &&
 			(!this.neighbors.left ||
 				(this.neighbors.left && this.distance.right !== 0))
 		) {
-			// console.count('x1')
-			this.distance.left += multiplier
-			this.distance.right = TILE_SIZE - this.distance.left
-
-			this.activeElement.x -= multiplier
-
-			if (this.distance.left >= 70) {
+			if (this.distance.left + multiplier >= 65) {
+				this.activeElement.x += this.distance.left - TILE_SIZE
 				this.distance.left = 0
 				this.distance.right = 0
 				this.findNeighbors()
 				this.activeElement.col = col
+			} else {
+				this.distance.left += multiplier
+				this.distance.right = TILE_SIZE - this.distance.left
+
+				this.activeElement.x -= multiplier
 			}
 		} else if (
 			dirX === 1 &&
 			(!this.neighbors.right ||
 				(this.neighbors.right && this.distance.left !== 0))
 		) {
-			// console.count('x2')
-			this.distance.right += multiplier
-			this.distance.left = TILE_SIZE - this.distance.right
-
-			this.activeElement.x += multiplier
-
-			if (this.distance.right >= 70) {
-				this.distance.left = 0
+			if (this.distance.right + multiplier >= 65) {
+				this.activeElement.x -= this.distance.right - TILE_SIZE
 				this.distance.right = 0
+				this.distance.left = 0
 				this.findNeighbors()
 				this.activeElement.col = col
+			} else {
+				this.distance.right += multiplier
+				this.distance.left = TILE_SIZE - this.distance.right
+
+				this.activeElement.x += multiplier
 			}
 		}
 	}
 
 	translateY(dirY, multiplier, row) {
-		// console.count('y')
-		// console.log(this.activeElement.y)
 		if (
 			dirY === -1 &&
 			(!this.neighbors.top ||
 				(this.neighbors.top && this.distance.bottom !== 0))
 		) {
-			// console.count('y1')
-			this.distance.top += multiplier
-			this.distance.bottom = TILE_SIZE - this.distance.top
-
-			this.activeElement.y -= multiplier
-
-			if (this.distance.top >= 70) {
+			if (this.distance.top + multiplier >= 65) {
+				this.activeElement.y += this.distance.top - TILE_SIZE
 				this.distance.top = 0
 				this.distance.bottom = 0
+
 				this.findNeighbors()
 				this.activeElement.row = row
+			} else {
+				this.distance.top += multiplier
+				this.distance.bottom = TILE_SIZE - this.distance.top
+
+				this.activeElement.y -= multiplier
 			}
 		} else if (
 			dirY === 1 &&
 			(!this.neighbors.bottom ||
 				(this.neighbors.bottom && this.distance.top !== 0))
 		) {
-			// console.count('y2', this.activeElement.x)
-			this.distance.bottom += multiplier
-			this.distance.top = TILE_SIZE - this.distance.bottom
-
-			this.activeElement.y += multiplier
-
-			if (this.distance.bottom >= 70) {
-				this.distance.top = 0
+			if (this.distance.bottom + multiplier >= 65) {
+				this.activeElement.y -= this.distance.bottom - TILE_SIZE
 				this.distance.bottom = 0
+				this.distance.top = 0
 				this.findNeighbors()
 				this.activeElement.row = row
+			} else {
+				this.distance.bottom += multiplier
+				this.distance.top = TILE_SIZE - this.distance.bottom
+
+				this.activeElement.y += multiplier
 			}
 		}
 	}
 
-	followCursor(dt) {
-		this.incr += dt
-		if (this.activeElement && this.incr >= 5) {
-			this.incr = 0
+	followCursor() {
+		if (this.activeElement) {
 			const elemX = this.activeElement.x
 			const elemY = this.activeElement.y
 
@@ -295,7 +296,7 @@ class Game {
 			const dirX = Math.sign(dx)
 			const dirY = Math.sign(dy)
 
-			const multiplier = 1
+			const multiplier = 5
 
 			if (Math.abs(dx) > Math.abs(dy)) {
 				if (perpendY === 0 && !this.neighbors[dirX === -1 ? 'left' : 'right']) {
@@ -321,12 +322,10 @@ class Game {
 		}
 	}
 
-	startFollowing() {
-		this.app.ticker.add(this.followCursor, this)
-	}
-
-	stopFollowing() {
-		this.app.ticker.remove(this.followCursor, this)
+	update() {
+		if (this.isFollowing) {
+			this.followCursor()
+		}
 	}
 
 	checkElement(element) {
@@ -345,10 +344,8 @@ class Game {
 		const targetElement = elements[row][col]
 		const currentElType = this.activeElement.type
 
-		console.log('d')
 		// Check whether element was placed to the source cell
 		if (currentElType === targetElement.type && targetElement.alpha === 0.7) {
-			console.log(targetElement.type)
 			this.completedElements[currentElType] = true
 			// Check whether all elements are completed
 			this.checkIsLevelCompleted()
@@ -396,107 +393,49 @@ class Game {
 			const isCursorOutside =
 				Math.abs(dx) > TILE_SIZE / 2 || Math.abs(dy) > TILE_SIZE / 2
 
-			if (isCursorOutside) {
-				this.startFollowing()
+			if (isCursorOutside && !this.isFollowing) {
+				this.isFollowing = true
 			} else {
-				this.stopFollowing()
+				this.isFollowing = false
 
 				const row = Math.floor((this.activeElement.y - this.topStart) / 70)
 				const col = Math.floor((this.activeElement.x - this.leftStart) / 70)
 
 				const perpendX = Math.abs(x - this.leftStart) % TILE_SIZE
 				const perpendY = Math.abs(y - this.topStart) % TILE_SIZE
-				if (!isCursorOutside && Math.abs(dx) > Math.abs(dy) && perpendY === 0) {
-					this.direction = 1 // X
-					if (Math.abs(dx > 3) && this.limit <= 5) {
-						this.movementsCounter.x += Math.abs(dx)
-						this.limit += 1 // X
-					} else {
-						this.movementsCounter.x = 0
-						this.limit = 0
-					}
+				if (dx === 0) {
+					this.movementsCounter.x = 0
+				} else if (dy === 0) {
+					this.movementsCounter.y = 0
+				}
+				if (
+					!isCursorOutside &&
+					Math.abs(dx) > Math.abs(dy) + 2 &&
+					perpendY === 0
+				) {
+					// this.movementsCounter.x++
 
+					// if (Math.abs(dx > 3) && this.limit <= 5) {
+					// 	this.movementsCounter.x += Math.abs(dx)
+					// 	this.limit += 1 // X
+					// } else {
+					// 	this.movementsCounter.x = 0
+					// 	this.limit = 0
+					// }
 					// Horizontal movement
-					// dx -= 2 * Math.sign(dx)
-					if (
-						dx < 0 &&
-						(!this.neighbors.left ||
-							(this.neighbors.left && this.distance.right !== 0))
-					) {
-						if (this.distance.left + Math.abs(dx) >= 65) {
-							element.x += this.distance.left - TILE_SIZE
-							this.distance.left = 0
-							this.distance.right = 0
-							this.findNeighbors()
-							this.activeElement.col = col
-						} else {
-							this.distance.left += Math.abs(dx)
-							this.distance.right = TILE_SIZE - this.distance.left
+					dx -= 2 * Math.sign(dx)
 
-							element.x += dx
-						}
-					} else if (
-						dx > 0 &&
-						(!this.neighbors.right ||
-							(this.neighbors.right && this.distance.left !== 0))
-					) {
-						if (this.distance.right + Math.abs(dx) >= 65) {
-							element.x -= this.distance.right - TILE_SIZE
-							this.distance.right = 0
-							this.distance.left = 0
-							this.findNeighbors()
-							this.activeElement.col = col
-						} else {
-							this.distance.right += Math.abs(dx)
-							this.distance.left = TILE_SIZE - this.distance.right
-
-							element.x += dx
-						}
-					}
+					this.translateX(Math.sign(dx), Math.abs(dx), col)
 				} else if (
 					!isCursorOutside &&
-					Math.abs(dy) > Math.abs(dx) &&
+					Math.abs(dy) > Math.abs(dx) + 2 &&
 					perpendX === 0
 				) {
-					this.direction = -1 // X
+					// this.movementsCounter.y++
 					// Vertical movement
-					// dy -= 2 * Math.sign(dy)
-					if (
-						dy < 0 &&
-						(!this.neighbors.top ||
-							(this.neighbors.top && this.distance.bottom !== 0))
-					) {
-						if (this.distance.top + Math.abs(dy) >= 65) {
-							element.y += this.distance.top - TILE_SIZE
-							this.distance.top = 0
-							this.distance.bottom = 0
+					dy -= 2 * Math.sign(dy)
 
-							this.findNeighbors()
-							this.activeElement.row = row
-						} else {
-							this.distance.top += Math.abs(dy)
-							this.distance.bottom = TILE_SIZE - this.distance.top
-
-							element.y += dy
-						}
-					} else if (
-						dy > 0 &&
-						(!this.neighbors.bottom ||
-							(this.neighbors.bottom && this.distance.top !== 0))
-					) {
-						if (this.distance.bottom + Math.abs(dy) >= 65) {
-							element.y -= this.distance.bottom - TILE_SIZE
-							this.distance.bottom = 0
-							this.distance.top = 0
-							this.findNeighbors()
-							this.activeElement.row = row
-						} else {
-							this.distance.bottom += Math.abs(dy)
-							this.distance.top = TILE_SIZE - this.distance.bottom
-
-							element.y += dy
-						}
-					}
+					this.translateY(Math.sign(dy), Math.abs(dy), row)
 				}
 			}
 		}
