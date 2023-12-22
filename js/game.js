@@ -301,12 +301,13 @@ class Game {
 			let dx = this.cursorX - TILE_SIZE / 2 - elemX
 			let dy = this.cursorY - TILE_SIZE / 2 - elemY
 
-			const dirX = Math.abs(dx) > 3 ? Math.sign(dx) : 0
-			const dirY = Math.abs(dy) > 3 ? Math.sign(dy) : 0
+			const dirX = Math.abs(dx) > 0 ? Math.sign(dx) : 0
+			const dirY = Math.abs(dy) > 0 ? Math.sign(dy) : 0
 
 			const multiplier = 8.75
-
+			console.log(dx, dy)
 			if (Math.abs(dx) > Math.abs(dy)) {
+				console.log('1')
 				if (
 					perpendY === 0 &&
 					(!this.neighbors[dirX === -1 ? 'left' : 'right'] ||
@@ -316,6 +317,7 @@ class Game {
 					this.translateX(dirX, multiplier, col)
 				} else if (
 					perpendX === 0 &&
+					Math.abs(dy) > 5 &&
 					(!this.neighbors[dirY === -1 ? 'top' : 'bottom'] ||
 						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
 							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
@@ -323,19 +325,23 @@ class Game {
 					this.translateY(dirY, multiplier, row)
 				}
 			} else if (Math.abs(dy) >= Math.abs(dx)) {
+				console.log('2')
 				if (
 					perpendX === 0 &&
 					(!this.neighbors[dirY === -1 ? 'top' : 'bottom'] ||
 						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
 							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
 				) {
+					console.log('21')
 					this.translateY(dirY, multiplier, row)
 				} else if (
 					perpendY === 0 &&
+					Math.abs(dx) > 5 &&
 					(!this.neighbors[dirX === -1 ? 'left' : 'right'] ||
 						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
 							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
 				) {
+					console.log('22')
 					this.translateX(dirX, multiplier, col)
 				}
 			}
