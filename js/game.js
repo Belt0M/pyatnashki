@@ -99,7 +99,6 @@ class Game {
 		this.difficulty = 0
 		this.level.getLevel(this.difficulty, elements => {
 			this.app.stage.addChild(...elements.flat())
-			console.log('Start', this.level.elements)
 		})
 
 		this.remainingTime = this.params.timers[this.difficulty]
@@ -305,9 +304,7 @@ class Game {
 			const dirY = Math.abs(dy) > 0 ? Math.sign(dy) : 0
 
 			const multiplier = 8.75
-			console.log(dx, dy)
 			if (Math.abs(dx) > Math.abs(dy)) {
-				console.log('1')
 				if (
 					perpendY === 0 &&
 					(!this.neighbors[dirX === -1 ? 'left' : 'right'] ||
@@ -317,32 +314,28 @@ class Game {
 					this.translateX(dirX, multiplier, col)
 				} else if (
 					perpendX === 0 &&
-					Math.abs(dy) > 5 &&
 					(!this.neighbors[dirY === -1 ? 'top' : 'bottom'] ||
 						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
 							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
 				) {
-					this.translateY(dirY, multiplier, row)
+					this.translateY(dirY, 4.375, row)
 				}
 			} else if (Math.abs(dy) >= Math.abs(dx)) {
-				console.log('2')
 				if (
 					perpendX === 0 &&
 					(!this.neighbors[dirY === -1 ? 'top' : 'bottom'] ||
 						(this.neighbors[dirY === -1 ? 'top' : 'bottom'] &&
 							this.distance[dirY === -1 ? 'top' : 'bottom'] !== 0))
 				) {
-					console.log('21')
 					this.translateY(dirY, multiplier, row)
 				} else if (
 					perpendY === 0 &&
-					Math.abs(dx) > 5 &&
 					(!this.neighbors[dirX === -1 ? 'left' : 'right'] ||
 						(this.neighbors[dirX === -1 ? 'left' : 'right'] &&
 							this.distance[dirX === -1 ? 'left' : 'right'] !== 0))
 				) {
-					console.log('22')
-					this.translateX(dirX, multiplier, col)
+					console.log(multiplier, this.activeElement.x)
+					this.translateX(dirX, 4.375, col)
 				}
 			}
 		}
