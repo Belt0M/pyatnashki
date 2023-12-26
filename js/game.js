@@ -5,6 +5,8 @@ class Game {
 
 		this.app = null;
 
+		this.listener = null;
+
 		this.sprites = {};
 		this.incr = 0;
 
@@ -79,6 +81,12 @@ class Game {
 		}
 	}
 
+	setListener(lst) {
+		if (lst) {
+			this.listener = lst;
+		}
+	}
+
 	// Start - stop timer functionality
 	startTimer() {
 		this.timer = setInterval(() => {
@@ -92,7 +100,9 @@ class Game {
 
 			if (this.remainingTime <= 0) {
 				this.stopTimer();
-				gameSession.gui.showMenu();
+				if (this.listener) {
+					this.listener.onGUIShowMenu();
+				}
 			}
 		}, 1000);
 	}
@@ -107,6 +117,9 @@ class Game {
 		this.level = new LevelManager();
 		this.level.urls = this.params.levels;
 		this.level.enums = this.params.elements;
+
+		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
+		this.app.stage.addChild(img);
 
 		// Generate and add the level elements to the scene
 		this.difficulty = 0;
@@ -370,7 +383,9 @@ class Game {
 		);
 		if (allElementsCompleted) {
 			this.stopTimer();
-			gameSession.gui.showMenu();
+			if (this.listener) {
+				this.listener.onGUIShowMenu(true);
+			}
 		}
 	}
 

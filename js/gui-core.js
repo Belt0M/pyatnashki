@@ -1,7 +1,7 @@
 class GUICore {
-	constructor(session) {
-		this.session = session;
+	constructor() {
 		this.menu = null;
+		this.listener = null;
 	}
 
 	/* PUBLIC */
@@ -11,10 +11,10 @@ class GUICore {
 
 		// Menu button click listener
 		const menuBtn = document.querySelector('.menu-btn');
-		menuBtn && menuBtn.addEventListener('click', () => this.openMenu());
+		menuBtn && menuBtn.addEventListener('click', () => this._openMenu());
 
 		const menuClose = document.querySelector('.menu-close');
-		menuClose && menuClose.addEventListener('click', () => this.closeMenu());
+		menuClose && menuClose.addEventListener('click', () => this._closeMenu());
 
 		// Menu listener
 		const menuElements = document.querySelector('#menu-elements');
@@ -23,113 +23,43 @@ class GUICore {
 
 		// Game over listener
 		const gameOver = document.querySelector('.game-over');
-		gameOver && gameOver.addEventListener('click', () => this.hideGameOver());
+		gameOver && gameOver.addEventListener('click', () => this._hideGameOver());
+	}
+
+	setListener(lst) {
+		if (lst) {
+			this.listener = lst;
+		}
 	}
 
 	showMenu(isCompleted = true) {
-		const next = document.querySelector('#next');
-		const prev = document.querySelector('#prev');
-		const restart = document.querySelector('#restart');
-		if (
-			this.session.game.difficulty + 1 ===
-			this.session.game.params.levels.length
-		) {
-			this._showGameOver();
-			next.disabled = true;
-			prev.disabled = false;
-		} else if (this.session.game.difficulty === 0) {
-			next.disabled = !isCompleted ? true : false;
-			prev.disabled = true;
-			restart.disabled = false;
-		} else {
-			next.disabled = !isCompleted ? true : false;
-			prev.disabled = false;
-			restart.disabled = true;
+		if (this.listener) {
+			this.listener.onGUIShowMenu(isCompleted);
 		}
-		this.menu.style.display = 'flex';
 	}
 
 	_nextLevel() {
-		const game = this.session.game;
-
-		if (game.difficulty + 1 < game.params.levels.length) {
-			game.difficulty += 1;
-
-			// Clear canvas and hide the menu
-			console.log(game.level.elements);
-			game.clearCanvas();
-			this._hideMenu();
-
-			// Add a background
-			let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
-			game.app.stage.addChild(img);
-
-			// Draw the new level
-			game.level.getLevel(game.difficulty, elements => {
-				game.app.stage.addChild(...elements.flat());
-				console.table(game.level.elements.map(el => el.map(el2 => el2.type)));
-				console.log(game.level.elements);
-			});
-
-			// Update a timer
-			game.remainingTime = game.params.timers[game.difficulty];
-			game.startTimer();
+		if (this.listener) {
+			this.listener.onGUINextLevel(() => this._hideMenu());
 		}
 	}
 
 	_prevLevel() {
-		const game = this.session.game;
-
-		if (game.difficulty - 1 >= 0) {
-			game.difficulty -= 1;
-
-			// Clear canvas and hide the menu
-			game.clearCanvas();
-			this._hideMenu();
-
-			// Update a timer
-			game.remainingTime = game.params.timers[game.difficulty];
-			game.startTimer();
-
-			// Add a background
-			let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
-			game.app.stage.addChild(img);
-
-			// Draw the new level
-			game.level.getLevel(game.difficulty, elements => {
-				game.app.stage.addChild(...elements.flat());
-			});
+		if (this.listener) {
+			this.listener.onGUIPrevLevel(() => this._hideMenu());
 		}
 	}
 
 	_restartLevel() {
-		const game = this.session.game;
-
-		if (game.difficulty === 0) {
-			// Clear canvas and hide the menu
-			game.clearCanvas();
-			this._hideMenu();
-
-			// Update a timer
-			game.remainingTime = game.params.timers[game.difficulty];
-			game.startTimer();
-
-			// Add a background
-			let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
-			game.app.stage.addChild(img);
-
-			// Draw the new level
-			game.level.getLevel(game.difficulty, elements => {
-				game.app.stage.addChild(...elements.flat());
-			});
+		if (this.listener) {
+			this.listener.onGUIRestartLevel(() => this._hideMenu());
 		}
 	}
 
 	_exit() {
-		this.session.game.clearCanvas();
-		this.session.game.difficulty = 0;
-		this._hideMenu();
-		document.querySelector('.greeting-banner').style.display = 'flex';
+		if (this.listener) {
+			this.listener.onGUIExitMenu(() => this._hideMenu());
+		}
 	}
 
 	_hideMenu() {
@@ -137,14 +67,14 @@ class GUICore {
 		document.querySelector('.menu-close').style.display = 'none';
 	}
 
-	_showGameOver() {
+	showGameOver() {
 		document.querySelector('.game-over').style.display = 'flex';
 	}
 
-	openMenu() {
-		this.showMenu(false);
-		document.querySelector('.menu-close').style.display = 'block';
-		this.session.game.stopTimer();
+	_openMenu() {
+		if (this.listener) {
+			this.listener.onGUIOpenMenu(false);
+		}
 	}
 
 	/* LISTENERS METHODS */
@@ -167,12 +97,14 @@ class GUICore {
 		}
 	}
 
-	hideGameOver() {
+	_hideGameOver() {
 		document.querySelector('.game-over').style.display = 'none';
 	}
 
-	closeMenu() {
+	_closeMenu() {
 		this._hideMenu();
-		this.session.game.startTimer();
+		if (this.listener) {
+			this.listener.onGUICloseMenu();
+		}
 	}
 }

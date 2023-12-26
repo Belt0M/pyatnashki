@@ -36,8 +36,7 @@ class LevelManager {
 
 				let newEl = PIXI.Sprite.from(`${BASE_URL + url}`);
 				newEl.type = value;
-
-				if (value === this.enums.border.id || value === this.enums.cell.id) {
+				if (value === this.enums.border.id || value === 1) {
 					newEl.alpha = 0;
 				}
 
@@ -47,7 +46,8 @@ class LevelManager {
 				) {
 					newEl.alpha = 0.7;
 				}
-
+				newEl.id =
+					value + 'x' + 127 + el * TILE_SIZE + 'y' + 34 + row * TILE_SIZE;
 				this.elements[row][el] = newEl;
 				newEl.row = row;
 				newEl.col = el;
@@ -56,7 +56,6 @@ class LevelManager {
 				newEl.position.set(127 + el * TILE_SIZE, 34 + row * TILE_SIZE);
 			}
 		}
-		console.table(this.elements.map(el => el.map(el2 => el2.type)));
 	}
 	// Find the level element by its ID
 	findUrlById(id) {
