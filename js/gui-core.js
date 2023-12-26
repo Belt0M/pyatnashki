@@ -2,8 +2,6 @@ class GUICore {
 	constructor(session) {
 		this.session = session;
 		this.menu = null;
-
-		this.init();
 	}
 
 	/* PUBLIC */
@@ -12,23 +10,20 @@ class GUICore {
 		this.menu = document.querySelector('.menu-wrapper');
 
 		// Menu button click listener
-		document
-			.querySelector('.menu-btn')
-			.addEventListener('click', this.openMenu);
+		const menuBtn = document.querySelector('.menu-btn');
+		menuBtn && menuBtn.addEventListener('click', () => this.openMenu());
 
-		document
-			.querySelector('.menu-close')
-			.addEventListener('click', this.closeMenu);
+		const menuClose = document.querySelector('.menu-close');
+		menuClose && menuClose.addEventListener('click', () => this.closeMenu());
 
 		// Menu listener
-		document
-			.querySelector('#menu-elements')
-			.addEventListener('click', this.menuController);
+		const menuElements = document.querySelector('#menu-elements');
+		menuElements &&
+			menuElements.addEventListener('click', e => this.menuController(e));
 
 		// Game over listener
-		document
-			.querySelector('.game-over')
-			.addEventListener('click', () => this.hideGameOver());
+		const gameOver = document.querySelector('.game-over');
+		gameOver && gameOver.addEventListener('click', () => this.hideGameOver());
 	}
 
 	showMenu(isCompleted = true) {
@@ -61,12 +56,9 @@ class GUICore {
 			game.difficulty += 1;
 
 			// Clear canvas and hide the menu
+			console.log(game.level.elements);
 			game.clearCanvas();
 			this._hideMenu();
-
-			// Update a timer
-			game.remainingTime = game.params.timers[game.difficulty];
-			game.startTimer();
 
 			// Add a background
 			let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
@@ -75,8 +67,13 @@ class GUICore {
 			// Draw the new level
 			game.level.getLevel(game.difficulty, elements => {
 				game.app.stage.addChild(...elements.flat());
+				console.table(game.level.elements.map(el => el.map(el2 => el2.type)));
 				console.log(game.level.elements);
 			});
+
+			// Update a timer
+			game.remainingTime = game.params.timers[game.difficulty];
+			game.startTimer();
 		}
 	}
 

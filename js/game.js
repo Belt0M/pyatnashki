@@ -67,14 +67,16 @@ class Game {
 		this.timerBody = document.querySelector('.game-timer');
 
 		// Start game listener
-		document
-			.querySelector('.greeting-banner span')
-			.addEventListener('click', () => this.startGame());
+		const greetingBtn = document.querySelector('.greeting-banner span');
+		greetingBtn &&
+			greetingBtn.addEventListener('click', () => this.startGame());
 
 		// Mouse listeners
-		this.app.view.addEventListener('mousedown', this.onMouseDown.bind(this));
-		this.app.view.addEventListener('mouseup', this.onMouseUp.bind(this));
-		this.app.view.addEventListener('mousemove', this.onMouseMove.bind(this));
+		if (this.app.view) {
+			this.app.view.addEventListener('mousedown', this.onMouseDown.bind(this));
+			this.app.view.addEventListener('mouseup', this.onMouseUp.bind(this));
+			this.app.view.addEventListener('mousemove', this.onMouseMove.bind(this));
+		}
 	}
 
 	// Start - stop timer functionality
@@ -106,10 +108,6 @@ class Game {
 		this.level.urls = this.params.levels;
 		this.level.enums = this.params.elements;
 
-		let img = PIXI.Sprite.from(BASE_URL + 'assets/img/background.png');
-
-		this.app.stage.addChild(img);
-
 		// Generate and add the level elements to the scene
 		this.difficulty = 0;
 		this.level.getLevel(this.difficulty, elements => {
@@ -122,7 +120,7 @@ class Game {
 
 	clearCanvas() {
 		this.app.stage.children = [];
-		this.level.elements = [];
+		this.level.elements = [[]];
 		this.completedElements = {
 			4: false,
 			5: false,
